@@ -3,8 +3,8 @@
    ===================================================================== */
 
 const PROFILE = {
-  email: "aravkataria2009@gmail.com",          // <-- put your real email here
-  linkedin: "linkedin.com/in/arav-kataria-59512b423", // <-- put your LinkedIn URL here
+  email: "aravkataria2009@gmail.com", 
+  linkedin: "linkedin.com/in/arav-kataria", 
   github: "https://github.com/Aravkataria",
 };
 
