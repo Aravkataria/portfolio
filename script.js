@@ -3,8 +3,8 @@
    ===================================================================== */
 
 const PROFILE = {
-  email: "aravkataria2009@gmail.com", 
-  linkedin: "linkedin.com/in/arav-kataria", 
+  email: "	aravkataria2009@gmail.com",          
+  linkedin: "https://linkedin.com/in/arav-kataria", // <-- put your LinkedIn URL here
   github: "https://github.com/Aravkataria",
 };
 
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!reduceMotion) {
-    setupFluidBackground();
+    setupPaintCanvas();
   }
 });
 
@@ -158,54 +158,122 @@ function setupDockScrollSpy() {
 }
 
 /* ---------------------------------------------------------------------
-   Fluid, mouse-reactive paint background
-   Each blob idles on a slow sine drift and eases toward the pointer
-   at its own speed, so the whole field feels like it's being stirred.
+   Ink-in-water paint background
+   Moving the mouse drops "ink" that blooms outward for ~1.2s then
+   lingers and slowly fades over ~10s. Stop moving and everything
+   already on screen finishes fading out on its own, back to white.
+   The canvas itself is CSS-blurred + multiply-blended (see style.css)
+   so overlapping drops mix like real pigment instead of stacking flat.
 --------------------------------------------------------------------- */
-function setupFluidBackground() {
-  const blobs = Array.from(document.querySelectorAll(".blob"));
-  if (!blobs.length) return;
+function setupPaintCanvas() {
+  const canvas = document.getElementById("paintCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
 
-  const layers = blobs.map((el, i) => ({
-    el,
-    parallax: 26 + i * 9,
-    driftAmp: 36 + i * 7,
-    driftSpeed: 0.00016 + i * 0.00004,
-    phase: i * 1.35,
-  }));
+  const DROP_LIFETIME_MS = 10000; // total time a drop takes to fully vanish
+  const SPREAD_MS = 1200; // time to reach full bloom radius
+  const MIN_MOVE_DIST = 16; // px the pointer must travel before a new drop spawns
+  const MAX_ACTIVE_DROPS = 90; // safety cap so a fast flick can't flood the canvas
+  const BASE_ALPHA = 0.5;
 
-  let targetX = 0, targetY = 0;
-  let smoothX = 0, smoothY = 0;
+  const PALETTE = [
+    [124, 58, 237],  // violet
+    [236, 72, 153],  // pink
+    [16, 185, 129],  // green
+    [59, 130, 246],  // blue
+    [251, 146, 60],  // coral
+  ];
 
-  function normalize(clientX, clientY) {
-    targetX = (clientX / window.innerWidth) * 2 - 1;
-    targetY = (clientY / window.innerHeight) * 2 - 1;
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let drops = [];
+  let lastX = null, lastY = null;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = "100vw";
+    canvas.style.height = "100vh";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  function spawnDrop(x, y) {
+    if (drops.length >= MAX_ACTIVE_DROPS) drops.shift();
+    const color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    const maxRadius = Math.min(window.innerWidth, window.innerHeight) * (0.09 + Math.random() * 0.1);
+    const blots = [1, 2, 3].map(() => ({
+      dx: (Math.random() - 0.5) * maxRadius * 0.5,
+      dy: (Math.random() - 0.5) * maxRadius * 0.5,
+      rRatio: 0.6 + Math.random() * 0.4,
+    }));
+    drops.push({ x, y, color, maxRadius, blots, birth: performance.now() });
   }
 
-  window.addEventListener("mousemove", (e) => normalize(e.clientX, e.clientY), { passive: true });
+  function handleMove(x, y) {
+    if (lastX === null) {
+      spawnDrop(x, y);
+      lastX = x; lastY = y;
+      return;
+    }
+    const dist = Math.hypot(x - lastX, y - lastY);
+    if (dist >= MIN_MOVE_DIST) {
+      spawnDrop(x, y);
+      lastX = x; lastY = y;
+    }
+  }
+
+  window.addEventListener(
+    "mousemove",
+    (e) => handleMove(e.clientX, e.clientY),
+    { passive: true }
+  );
   window.addEventListener(
     "touchmove",
     (e) => {
       const t = e.touches[0];
-      if (t) normalize(t.clientX, t.clientY);
+      if (t) handleMove(t.clientX, t.clientY);
     },
     { passive: true }
   );
 
-  function tick(t) {
-    smoothX += (targetX - smoothX) * 0.045;
-    smoothY += (targetY - smoothY) * 0.045;
-
-    layers.forEach((layer) => {
-      const driftX = Math.sin(t * layer.driftSpeed + layer.phase) * layer.driftAmp;
-      const driftY = Math.cos(t * layer.driftSpeed * 0.82 + layer.phase) * layer.driftAmp;
-      const px = smoothX * layer.parallax;
-      const py = smoothY * layer.parallax;
-      layer.el.style.transform = `translate3d(${(driftX + px).toFixed(1)}px, ${(driftY + py).toFixed(1)}px, 0)`;
-    });
-
-    requestAnimationFrame(tick);
+  function easeOutCubic(p) {
+    return 1 - Math.pow(1 - p, 3);
   }
 
-  requestAnimationFrame(tick);
+  function draw() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    const now = performance.now();
+
+    drops = drops.filter((d) => now - d.birth < DROP_LIFETIME_MS);
+
+    drops.forEach((d) => {
+      const age = now - d.birth;
+      const spreadP = easeOutCubic(Math.min(age / SPREAD_MS, 1));
+      const radius = d.maxRadius * spreadP;
+      const fadeP = Math.min(age / DROP_LIFETIME_MS, 1);
+      const alpha = BASE_ALPHA * Math.pow(1 - fadeP, 1.6); // lingers, then fades slowly
+
+      if (alpha <= 0.004 || radius <= 0) return;
+
+      const [r, g, b] = d.color;
+      d.blots.forEach((blot) => {
+        const cx = d.x + blot.dx * spreadP;
+        const cy = d.y + blot.dy * spreadP;
+        const rad = Math.max(radius * blot.rRatio, 1);
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
 }
