@@ -11,7 +11,513 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css" />
+<style>
+/* =========================================================
+   TOKENS
+========================================================= */
+:root {
+  --bg: #fdfdfb;
+  --ink: #14141a;
+  --muted: #6b6b76;
+  --line: rgba(20, 20, 26, 0.09);
+  --card: rgba(255, 255, 255, 0.6);
+  --card-border: rgba(20, 20, 26, 0.08);
+
+  --violet: #7c3aed;
+  --pink: #ec4899;
+  --green: #10b981;
+
+  --blob-violet: #b9a4f7;
+  --blob-pink: #f8b4d9;
+  --blob-green: #9be8c9;
+  --blob-blue: #a9c7f7;
+  --blob-coral: #fbc8a3;
+
+  --radius: 18px;
+  --radius-sm: 10px;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --max-w: 780px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection { background: var(--violet); color: #fff; }
+
+a { color: inherit; text-decoration: none; }
+
+/* =========================================================
+   INK-IN-WATER PAINT BACKGROUND
+   A single canvas painted with fading ink blots, blurred and
+   multiply-blended against the white page so colors mix like
+   pigment spreading through water. Idle = plain white.
+========================================================= */
+.paint-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  filter: blur(34px);
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+  will-change: filter;
+}
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px clamp(20px, 5vw, 64px);
+  backdrop-filter: blur(6px);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+.brand-dot { color: var(--violet); }
+
+.topbar-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: rgba(255,255,255,0.55);
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+.topbar-cta:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  border-color: var(--violet);
+}
+
+/* =========================================================
+   LAYOUT / SECTIONS
+========================================================= */
+main {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 6vw, 32px);
+}
+
+.section {
+  padding: 96px 0 64px;
+  border-bottom: 1px solid var(--line);
+}
+.section:last-of-type { border-bottom: none; }
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--violet);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 14px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 32px;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+.hero {
+  padding-top: 148px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 7vw, 4.2rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  margin: 0 0 24px;
+}
+
+.ink-accent { color: var(--violet); }
+.hero-italic {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--pink);
+}
+
+.hero-sub {
+  max-width: 560px;
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin: 0 0 36px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.94rem;
+  padding: 13px 24px;
+  border-radius: 999px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, color 0.25s ease;
+  border: 1px solid transparent;
+}
+.btn--primary {
+  background: var(--ink);
+  color: #fff;
+}
+.btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(20,20,26,0.22);
+}
+.btn--ghost {
+  border-color: var(--card-border);
+  background: rgba(255,255,255,0.5);
+  color: var(--ink);
+}
+.btn--ghost:hover {
+  transform: translateY(-2px);
+  border-color: var(--violet);
+  color: var(--violet);
+}
+
+.social-row {
+  display: flex;
+  gap: 12px;
+}
+.social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: rgba(255,255,255,0.5);
+  color: var(--ink);
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+.social-icon:hover {
+  transform: translateY(-2px);
+  background: var(--ink);
+  color: #fff;
+}
+
+/* =========================================================
+   ABOUT
+========================================================= */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 48px;
+}
+
+.about-lead {
+  font-size: 1.05rem;
+  color: var(--ink);
+  margin: 0;
+}
+
+.about-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 0.92rem;
+}
+.about-facts li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.about-facts li span {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* =========================================================
+   PROJECTS
+========================================================= */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.project-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(20,20,26,0.1);
+  border-color: var(--violet);
+}
+
+.project-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.project-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.project-card-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  color: var(--muted);
+  transition: all 0.25s ease;
+}
+.project-card:hover .project-card-link {
+  border-color: var(--violet);
+  color: var(--violet);
+}
+
+.project-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+  flex-grow: 1;
+}
+
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.project-tags span {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--violet);
+}
+
+/* =========================================================
+   SKILLS
+========================================================= */
+.skills-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.skill-pill {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: rgba(255,255,255,0.55);
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+.skill-pill:hover {
+  transform: translateY(-2px) rotate(-1deg);
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+/* =========================================================
+   CONTACT
+========================================================= */
+.contact-sub {
+  color: var(--muted);
+  margin: -16px 0 32px;
+  max-width: 480px;
+}
+
+.contact-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.contact-card:hover {
+  transform: translateX(4px);
+  border-color: var(--violet);
+  background: #fff;
+}
+.contact-card-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.contact-card-value {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+.footer {
+  padding: 40px 0 160px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* =========================================================
+   DOCK NAV
+========================================================= */
+.dock {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 32px rgba(20,20,26,0.12);
+}
+
+.dock-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--muted);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.dock-item span {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.3s ease;
+}
+.dock-item:hover span,
+.dock-item.is-active span {
+  max-width: 80px;
+}
+.dock-item:hover,
+.dock-item.is-active {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 720px) {
+  .about-grid { grid-template-columns: 1fr; gap: 28px; }
+  .project-grid { grid-template-columns: 1fr; }
+  .dock-item span { display: none; }
+  .dock { gap: 2px; }
+  .topbar-cta span { display: none; }
+  .hero { padding-top: 120px; }
+  .footer { padding-bottom: 120px; }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .blob { transition: none !important; }
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+</style>
 </head>
 <body>
 
@@ -151,6 +657,343 @@
     </a>
   </nav>
 
-<script src="script.js"></script>
+<script>
+/* =====================================================================
+   EDIT YOUR INFO HERE — this is the only place you should need to touch
+   ===================================================================== */
+
+const PROFILE = {
+  email: "your.email@example.com",          // <-- put your real email here
+  linkedin: "https://linkedin.com/in/your-handle", // <-- put your LinkedIn URL here
+  github: "https://github.com/Aravkataria",
+};
+
+const PROJECTS = [
+  {
+    name: "Arch-Ai-Tex",
+    description:
+      "Generates house floor plans from inputs like area and room count, with a sidebar chatbot. Rebuilding that chatbot as a small language model trained from scratch instead of an external API.",
+    tags: ["Python", "Streamlit", "SLM"],
+    url: "https://github.com/Aravkataria/Arch-Ai-Tex",
+  },
+  {
+    name: "LumiDesk",
+    description:
+      "ESP32 + OLED desk display for whatever's currently playing. Reads Windows' media session API directly — works with Spotify, YouTube, or any app, no OAuth or rate limits.",
+    tags: ["ESP32", "C++", "FastAPI", "Python"],
+    url: "https://github.com/Aravkataria/LumiDesk",
+  },
+  {
+    name: "Pyramid Compress",
+    description:
+      "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction. Ships as a Python CLI and a drag-and-drop web app.",
+    tags: ["Python", "NumPy", "Pillow", "JavaScript"],
+    url: "https://github.com/Aravkataria/pyramid-compression",
+  },
+  {
+    name: "Ultrasonic Radar",
+    description:
+      "DIY 2D spatial mapper — an ultrasonic sensor sweeps 180 degrees on a servo, converting polar readings into a live X/Y point-cloud.",
+    tags: ["Arduino", "ESP32", "Embedded"],
+    url: "https://github.com/Aravkataria",
+  },
+];
+
+const SKILLS = [
+  "Python", "JavaScript", "C++", "HTML / CSS",
+  "FastAPI", "NumPy", "Pillow", "Streamlit",
+  "Arduino / ESP32", "Embedded Systems", "Git & GitHub",
+];
+
+/* =====================================================================
+   Below this line: rendering + background animation.
+   No need to edit unless you want to change behavior.
+   ===================================================================== */
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Each step runs independently — if one throws, it's logged to the
+  // console but every other feature (projects, skills, background,
+  // nav) still initializes instead of the whole page going dark.
+  safeRun("wireProfileLinks", wireProfileLinks);
+  safeRun("renderProjects", renderProjects);
+  safeRun("renderSkills", renderSkills);
+  safeRun("setYear", setYear);
+  safeRun("setupDockScrollSpy", setupDockScrollSpy);
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduceMotion) {
+    safeRun("setupPaintCanvas", setupPaintCanvas);
+  }
+});
+
+function safeRun(label, fn) {
+  try {
+    fn();
+  } catch (err) {
+    console.error(`[portfolio] ${label} failed:`, err);
+  }
+}
+
+function wireProfileLinks() {
+  const linkedinEls = [document.getElementById("linkedinLink"), document.getElementById("contactLinkedin")];
+  linkedinEls.forEach((el) => {
+    if (!el) return;
+    el.href = PROFILE.linkedin;
+  });
+
+  const emailEls = [document.getElementById("emailLink"), document.getElementById("contactEmail")];
+  emailEls.forEach((el) => {
+    if (!el) return;
+    el.href = `mailto:${PROFILE.email}`;
+  });
+  const emailValue = document.querySelector("#contactEmail .contact-card-value");
+  if (emailValue) emailValue.textContent = PROFILE.email;
+
+  const linkedinValue = document.querySelector("#contactLinkedin .contact-card-value");
+  if (linkedinValue) {
+    linkedinValue.textContent = PROFILE.linkedin.replace(/^https?:\/\//, "");
+  }
+
+  const githubEls = [document.getElementById("ctaGithub")];
+  githubEls.forEach((el) => {
+    if (!el) return;
+    el.href = PROFILE.github;
+  });
+}
+
+function renderProjects() {
+  const grid = document.getElementById("projectGrid");
+  if (!grid) return;
+
+  grid.innerHTML = PROJECTS.map(
+    (p) => `
+    <article class="project-card">
+      <div class="project-card-top">
+        <h3>${escapeHtml(p.name)}</h3>
+        <a class="project-card-link" href="${p.url}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(p.name)} on GitHub">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <p>${escapeHtml(p.description)}</p>
+      <div class="project-tags">
+        ${p.tags.map((t) => `<span>${escapeHtml(t)}</span>`).join("")}
+      </div>
+    </article>
+  `
+  ).join("");
+}
+
+function renderSkills() {
+  const cloud = document.getElementById("skillsCloud");
+  if (!cloud) return;
+  cloud.innerHTML = SKILLS.map((s) => `<span class="skill-pill">${escapeHtml(s)}</span>`).join("");
+}
+
+function setYear() {
+  const el = document.getElementById("year");
+  if (el) el.textContent = new Date().getFullYear();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+   Scroll spy for the floating dock nav
+--------------------------------------------------------------------- */
+function setupDockScrollSpy() {
+  const sections = document.querySelectorAll(".section");
+  const dockItems = document.querySelectorAll(".dock-item");
+  if (!sections.length || !dockItems.length) return;
+  if (typeof IntersectionObserver === "undefined") return;
+
+  const map = new Map();
+  dockItems.forEach((item) => map.set(item.dataset.section, item));
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const item = map.get(entry.target.id);
+        if (!item) return;
+        if (entry.isIntersecting) {
+          dockItems.forEach((d) => d.classList.remove("is-active"));
+          item.classList.add("is-active");
+        }
+      });
+    },
+    { rootMargin: "-40% 0px -50% 0px", threshold: 0 }
+  );
+
+  sections.forEach((s) => observer.observe(s));
+}
+
+/* ---------------------------------------------------------------------
+   Ink-in-water paint background
+   Moving the mouse drops "ink" that blooms outward for ~1.2s then
+   lingers and slowly fades over ~10s. Stop moving and everything
+   already on screen finishes fading out on its own, back to white.
+   The canvas itself is CSS-blurred + multiply-blended (see style.css)
+   so overlapping drops mix like real pigment instead of stacking flat.
+--------------------------------------------------------------------- */
+function setupPaintCanvas() {
+  const canvas = document.getElementById("paintCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  const DROP_LIFETIME_MS = 10000; // total time a drop takes to fully vanish
+  const SPREAD_MS = 1400; // time to reach full bloom radius
+  const MIN_MOVE_DIST = 38; // px the pointer must travel before a new drop spawns
+  const MIN_SPAWN_INTERVAL_MS = 130; // floor on how often drops can land, even if flicked fast
+  const MAX_ACTIVE_DROPS = 55; // safety cap so a fast flick can't flood the canvas
+  const BASE_ALPHA = 0.4; // visible, but still meant to tint rather than cover
+
+  const COLOR_HOLD_MS = 6000; // how long a color stays in charge before shifting
+  const COLOR_TRANSITION_MS = 2200; // how long the slow crossfade to the next color takes
+
+  // Soft, not neon — but with enough saturation to actually read against white.
+  const PALETTE = [
+    [168, 138, 247],  // violet
+    [247, 150, 201],  // pink
+    [120, 224, 181],  // green
+    [140, 180, 247],  // blue
+    [250, 178, 130],  // coral
+  ];
+
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let drops = [];
+  let lastX = null, lastY = null, lastSpawnAt = 0;
+
+  // Persistent color cycle: every drop born "now" reads the same slowly
+  // shifting color, instead of each drop rolling its own random one.
+  let colorOrder = shuffle(PALETTE.map((_, i) => i));
+  let colorCycleStart = performance.now();
+  let colorCursor = 0;
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function lerpColor(c1, c2, t) {
+    return [
+      Math.round(c1[0] + (c2[0] - c1[0]) * t),
+      Math.round(c1[1] + (c2[1] - c1[1]) * t),
+      Math.round(c1[2] + (c2[2] - c1[2]) * t),
+    ];
+  }
+
+  function currentColor(now) {
+    const cycleLen = COLOR_HOLD_MS + COLOR_TRANSITION_MS;
+    let elapsed = now - colorCycleStart;
+    while (elapsed >= cycleLen) {
+      colorCycleStart += cycleLen;
+      colorCursor = (colorCursor + 1) % colorOrder.length;
+      elapsed = now - colorCycleStart;
+    }
+    const from = PALETTE[colorOrder[colorCursor]];
+    const to = PALETTE[colorOrder[(colorCursor + 1) % colorOrder.length]];
+    if (elapsed <= COLOR_HOLD_MS) return from;
+    const t = (elapsed - COLOR_HOLD_MS) / COLOR_TRANSITION_MS;
+    return lerpColor(from, to, t);
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = "100vw";
+    canvas.style.height = "100vh";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  function spawnDrop(x, y) {
+    if (drops.length >= MAX_ACTIVE_DROPS) drops.shift();
+    const color = currentColor(performance.now());
+    const maxRadius = Math.min(window.innerWidth, window.innerHeight) * (0.13 + Math.random() * 0.09);
+    const blots = [1, 2].map(() => ({
+      dx: (Math.random() - 0.5) * maxRadius * 0.22,
+      dy: (Math.random() - 0.5) * maxRadius * 0.22,
+      rRatio: 0.82 + Math.random() * 0.22,
+    }));
+    drops.push({ x, y, color, maxRadius, blots, birth: performance.now() });
+  }
+
+  function handleMove(x, y) {
+    const now = performance.now();
+    if (lastX === null) {
+      spawnDrop(x, y);
+      lastX = x; lastY = y; lastSpawnAt = now;
+      return;
+    }
+    const dist = Math.hypot(x - lastX, y - lastY);
+    if (dist >= MIN_MOVE_DIST && now - lastSpawnAt >= MIN_SPAWN_INTERVAL_MS) {
+      spawnDrop(x, y);
+      lastX = x; lastY = y; lastSpawnAt = now;
+    }
+  }
+
+  window.addEventListener(
+    "mousemove",
+    (e) => handleMove(e.clientX, e.clientY),
+    { passive: true }
+  );
+  window.addEventListener(
+    "touchmove",
+    (e) => {
+      const t = e.touches[0];
+      if (t) handleMove(t.clientX, t.clientY);
+    },
+    { passive: true }
+  );
+
+  function easeOutCubic(p) {
+    return 1 - Math.pow(1 - p, 3);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    const now = performance.now();
+
+    drops = drops.filter((d) => now - d.birth < DROP_LIFETIME_MS);
+
+    drops.forEach((d) => {
+      const age = now - d.birth;
+      const spreadP = easeOutCubic(Math.min(age / SPREAD_MS, 1));
+      const radius = d.maxRadius * spreadP;
+      const fadeP = Math.min(age / DROP_LIFETIME_MS, 1);
+      const alpha = BASE_ALPHA * Math.pow(1 - fadeP, 1.6); // lingers, then fades slowly
+
+      if (alpha <= 0.004 || radius <= 0) return;
+
+      const [r, g, b] = d.color;
+      d.blots.forEach((blot) => {
+        const cx = d.x + blot.dx * spreadP;
+        const cy = d.y + blot.dy * spreadP;
+        const rad = Math.max(radius * blot.rRatio, 1);
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+</script>
 </body>
 </html>
