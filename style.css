@@ -48,9 +48,6 @@ a { color: inherit; text-decoration: none; }
 
 /* =========================================================
    INK-IN-WATER PAINT BACKGROUND
-   A single canvas painted with fading ink blots, blurred and
-   multiply-blended against the white page so colors mix like
-   pigment spreading through water. Idle = plain white.
 ========================================================= */
 .paint-canvas {
   position: fixed;
@@ -414,91 +411,3 @@ main {
 .contact-card-value {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1rem;
-}
-
-/* =========================================================
-   FOOTER
-========================================================= */
-.footer {
-  padding: 40px 0 160px;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-
-/* =========================================================
-   DOCK NAV
-========================================================= */
-.dock {
-  position: fixed;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
-  display: flex;
-  gap: 4px;
-  padding: 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.72);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 12px 32px rgba(20,20,26,0.12);
-}
-
-.dock-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--muted);
-  transition: background 0.25s ease, color 0.25s ease;
-}
-.dock-item span {
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: max-width 0.3s ease;
-}
-.dock-item:hover span,
-.dock-item.is-active span {
-  max-width: 80px;
-}
-.dock-item:hover,
-.dock-item.is-active {
-  background: var(--ink);
-  color: #fff;
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-@media (max-width: 720px) {
-  .about-grid { grid-template-columns: 1fr; gap: 28px; }
-  .project-grid { grid-template-columns: 1fr; }
-  .dock-item span { display: none; }
-  .dock { gap: 2px; }
-  .topbar-cta span { display: none; }
-  .hero { padding-top: 120px; }
-  .footer { padding-bottom: 120px; }
-}
-
-/* =========================================================
-   ACCESSIBILITY
-========================================================= */
-a:focus-visible,
-button:focus-visible {
-  outline: 2px solid var(--violet);
-  outline-offset: 3px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .blob { transition: none !important; }
-  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-}
