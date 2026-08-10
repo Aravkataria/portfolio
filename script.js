@@ -174,18 +174,19 @@ function setupPaintCanvas() {
   const SPREAD_MS = 1400; // time to reach full bloom radius
   const MIN_MOVE_DIST = 38; // px the pointer must travel before a new drop spawns
   const MIN_SPAWN_INTERVAL_MS = 130; // floor on how often drops can land, even if flicked fast
-  const MAX_ACTIVE_DROPS = 60; // safety cap so a fast flick can't flood the canvas
-  const BASE_ALPHA = 0.55;
+  const MAX_ACTIVE_DROPS = 55; // safety cap so a fast flick can't flood the canvas
+  const BASE_ALPHA = 0.22; // low on purpose — colors should tint the white, not cover it
  
   const COLOR_HOLD_MS = 6000; // how long a color stays in charge before shifting
   const COLOR_TRANSITION_MS = 2200; // how long the slow crossfade to the next color takes
  
+  // Pastel, not saturated — these are meant to barely tint the page.
   const PALETTE = [
-    [124, 58, 237],  // violet
-    [236, 72, 153],  // pink
-    [16, 185, 129],  // green
-    [59, 130, 246],  // blue
-    [251, 146, 60],  // coral
+    [185, 164, 247],  // pale violet
+    [248, 180, 217],  // pale pink
+    [155, 232, 201],  // pale green
+    [169, 199, 247],  // pale blue
+    [251, 200, 163],  // pale coral
   ];
  
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -244,7 +245,7 @@ function setupPaintCanvas() {
   function spawnDrop(x, y) {
     if (drops.length >= MAX_ACTIVE_DROPS) drops.shift();
     const color = currentColor(performance.now());
-    const maxRadius = Math.min(window.innerWidth, window.innerHeight) * (0.1 + Math.random() * 0.07);
+    const maxRadius = Math.min(window.innerWidth, window.innerHeight) * (0.13 + Math.random() * 0.09);
     const blots = [1, 2].map(() => ({
       dx: (Math.random() - 0.5) * maxRadius * 0.22,
       dy: (Math.random() - 0.5) * maxRadius * 0.22,
@@ -320,6 +321,4 @@ function setupPaintCanvas() {
  
   requestAnimationFrame(draw);
 }
-
-  requestAnimationFrame(draw);
-}
+ 
