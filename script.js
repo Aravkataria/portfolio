@@ -168,156 +168,235 @@ function setupDockScrollSpy() {
 /* ---------------------------------------------------------------------
    Ink-in-water paint background
 --------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------
+   WebGL Ping-Pong Fluid Ink Simulation
+--------------------------------------------------------------------- */
 function setupPaintCanvas() {
   const canvas = document.getElementById("paintCanvas");
   if (!canvas) return;
-  const ctx = canvas.getContext("2d");
 
-  const DROP_LIFETIME_MS = 10000;
-  const SPREAD_MS = 1400;
-  const MIN_MOVE_DIST = 38;
-  const MIN_SPAWN_INTERVAL_MS = 130;
-  const MAX_ACTIVE_DROPS = 55;
-  const BASE_ALPHA = 0.4;
+  const gl = canvas.getContext("webgl", { antialias: false, alpha: true });
+  if (!gl) {
+    console.warn("WebGL not supported. Fluid background disabled.");
+    return;
+  }
 
-  const COLOR_HOLD_MS = 6000;
-  const COLOR_TRANSITION_MS = 2200;
-
-  const PALETTE = [
-    [168, 138, 247],
-    [247, 150, 201],
-    [120, 224, 181],
-    [140, 180, 247],
-    [250, 178, 130],
-  ];
-
-  let dpr = Math.min(window.devicePixelRatio || 1, 2);
-  let drops = [];
-  let lastX = null, lastY = null, lastSpawnAt = 0;
-
-  let colorOrder = shuffle(PALETTE.map((_, i) => i));
-  let colorCycleStart = performance.now();
-  let colorCursor = 0;
-
-  function shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+  // --- Shaders ---
+  const vertexShaderSrc = `
+    attribute vec2 a_position;
+    varying vec2 v_uv;
+    void main() {
+      v_uv = a_position * 0.5 + 0.5;
+      gl_Position = vec4(a_position, 0.0, 1.0);
     }
-    return a;
-  }
+  `;
 
-  function lerpColor(c1, c2, t) {
-    return [
-      Math.round(c1[0] + (c2[0] - c1[0]) * t),
-      Math.round(c1[1] + (c2[1] - c1[1]) * t),
-      Math.round(c1[2] + (c2[2] - c1[2]) * t),
-    ];
-  }
+  // The main simulation shader: handles ink fading, spreading, and mouse splats
+  const fragmentShaderSrc = `
+    precision highp float;
+    varying vec2 v_uv;
+    uniform sampler2D u_texture;
+    uniform vec2 u_mouse;
+    uniform vec2 u_velocity;
+    uniform float u_aspect;
+    uniform vec3 u_color;
+    uniform float u_splatActive;
 
-  function currentColor(now) {
-    const cycleLen = COLOR_HOLD_MS + COLOR_TRANSITION_MS;
-    let elapsed = now - colorCycleStart;
-    while (elapsed >= cycleLen) {
-      colorCycleStart += cycleLen;
-      colorCursor = (colorCursor + 1) % colorOrder.length;
-      elapsed = now - colorCycleStart;
+    void main() {
+      vec2 uv = v_uv;
+
+      // 1. Fluid Advection (Expansion and Swirl)
+      // Slightly push the ink outwards from the center and warp it
+      vec2 warp = uv - 0.5;
+      vec2 advected_uv = uv - warp * 0.003 - u_velocity * 0.001;
+      vec4 prev = texture2D(u_texture, advected_uv);
+      
+      // Fade ink out slowly
+      prev.a *= 0.96; 
+      prev.rgb *= 0.98;
+
+      // 2. Mouse Splat (Adding new ink)
+      vec2 d = uv - u_mouse;
+      d.x *= u_aspect;
+      float dist = length(d);
+      
+      // Smooth, soft brush
+      float splat = exp(-dist * dist * 400.0) * u_splatActive;
+      vec4 newColor = vec4(u_color * splat, splat);
+
+      // Blend previous frame with new splat
+      gl_FragColor = prev + newColor;
     }
-    const from = PALETTE[colorOrder[colorCursor]];
-    const to = PALETTE[colorOrder[(colorCursor + 1) % colorOrder.length]];
-    if (elapsed <= COLOR_HOLD_MS) return from;
-    const t = (elapsed - COLOR_HOLD_MS) / COLOR_TRANSITION_MS;
-    return lerpColor(from, to, t);
+  `;
+
+  const displayShaderSrc = `
+    precision highp float;
+    varying vec2 v_uv;
+    uniform sampler2D u_texture;
+    void main() {
+      vec4 color = texture2D(u_texture, v_uv);
+      // Ensure it outputs smoothly to the transparent canvas
+      gl_FragColor = color;
+    }
+  `;
+
+  // --- WebGL Helpers ---
+  function compileShader(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      return null;
+    }
+    return shader;
   }
+
+  function createProgram(vsSrc, fsSrc) {
+    const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
+    const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    return prog;
+  }
+
+  const simProgram = createProgram(vertexShaderSrc, fragmentShaderSrc);
+  const displayProgram = createProgram(vertexShaderSrc, displayShaderSrc);
+
+  // --- Geometry ---
+  // A simple quad that covers the entire screen
+  const positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1, -1,  1, -1,  -1,  1,
+    -1,  1,  1, -1,   1,  1
+  ]), gl.STATIC_DRAW);
+
+  // --- Framebuffers (Ping-Pong Setup) ---
+  function createFBO(w, h) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    return { fbo, texture };
+  }
+
+  let fboA, fboB;
+  let width, height;
 
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = "100vw";
-    canvas.style.height = "100vh";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth * dpr;
+    height = window.innerHeight * dpr;
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, width, height);
+
+    fboA = createFBO(width, height);
+    fboB = createFBO(width, height);
   }
   resize();
   window.addEventListener("resize", resize);
 
-  function spawnDrop(x, y) {
-    if (drops.length >= MAX_ACTIVE_DROPS) drops.shift();
-    const color = currentColor(performance.now());
-    const maxRadius = Math.min(window.innerWidth, window.innerHeight) * (0.13 + Math.random() * 0.09);
-    const blots = [1, 2].map(() => ({
-      dx: (Math.random() - 0.5) * maxRadius * 0.22,
-      dy: (Math.random() - 0.5) * maxRadius * 0.22,
-      rRatio: 0.82 + Math.random() * 0.22,
-    }));
-    drops.push({ x, y, color, maxRadius, blots, birth: performance.now() });
-  }
+  // --- Interaction State ---
+  let mouse = { x: -1, y: -1, vx: 0, vy: 0, active: 0 };
+  let lastMouse = { x: -1, y: -1 };
+  
+  // Pastel fluid palette
+  const PALETTE = [
+    [185/255, 164/255, 247/255], // Violet
+    [248/255, 180/255, 217/255], // Pink
+    [155/255, 232/255, 201/255], // Mint
+    [169/255, 199/255, 247/255], // Blue
+    [251/255, 200/255, 163/255], // Coral
+  ];
+  let colorIndex = 0;
+  let currentColor = PALETTE[0];
 
-  function handleMove(x, y) {
-    const now = performance.now();
-    if (lastX === null) {
-      spawnDrop(x, y);
-      lastX = x; lastY = y; lastSpawnAt = now;
-      return;
+  function handleMove(clientX, clientY) {
+    const x = clientX / window.innerWidth;
+    const y = 1.0 - (clientY / window.innerHeight); // WebGL Y is flipped
+    
+    if (lastMouse.x !== -1) {
+      mouse.vx = x - lastMouse.x;
+      mouse.vy = y - lastMouse.y;
+      
+      // Cycle colors if mouse moves fast enough
+      if (Math.hypot(mouse.vx, mouse.vy) > 0.01) {
+        colorIndex = (colorIndex + 1) % (PALETTE.length * 10);
+        currentColor = PALETTE[Math.floor(colorIndex / 10)];
+      }
     }
-    const dist = Math.hypot(x - lastX, y - lastY);
-    if (dist >= MIN_MOVE_DIST && now - lastSpawnAt >= MIN_SPAWN_INTERVAL_MS) {
-      spawnDrop(x, y);
-      lastX = x; lastY = y; lastSpawnAt = now;
-    }
+
+    mouse.x = x;
+    mouse.y = y;
+    mouse.active = 1.0;
+    
+    lastMouse.x = x;
+    lastMouse.y = y;
   }
 
-  window.addEventListener(
-    "mousemove",
-    (e) => handleMove(e.clientX, e.clientY),
-    { passive: true }
-  );
-  window.addEventListener(
-    "touchmove",
-    (e) => {
-      const t = e.touches[0];
-      if (t) handleMove(t.clientX, t.clientY);
-    },
-    { passive: true }
-  );
+  window.addEventListener("mousemove", (e) => handleMove(e.clientX, e.clientY));
+  window.addEventListener("touchmove", (e) => {
+    if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
 
-  function easeOutCubic(p) {
-    return 1 - Math.pow(1 - p, 3);
+  // --- Render Loop ---
+  function render() {
+    // 1. Simulate: Render to FBO B using texture from FBO A
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fboB.fbo);
+    gl.viewport(0, 0, width, height);
+    gl.useProgram(simProgram);
+
+    // Bind position buffer
+    const posLoc = gl.getAttribLocation(simProgram, "a_position");
+    gl.enableVertexAttribArray(posLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // Uniforms
+    gl.uniform1i(gl.getUniformLocation(simProgram, "u_texture"), 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fboA.texture);
+
+    gl.uniform2f(gl.getUniformLocation(simProgram, "u_mouse"), mouse.x, mouse.y);
+    gl.uniform2f(gl.getUniformLocation(simProgram, "u_velocity"), mouse.vx, mouse.vy);
+    gl.uniform1f(gl.getUniformLocation(simProgram, "u_aspect"), width / height);
+    gl.uniform3f(gl.getUniformLocation(simProgram, "u_color"), currentColor[0], currentColor[1], currentColor[2]);
+    gl.uniform1f(gl.getUniformLocation(simProgram, "u_splatActive"), mouse.active);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    // Decay mouse activity so it stops splatting when still
+    mouse.active *= 0.9;
+    mouse.vx *= 0.9;
+    mouse.vy *= 0.9;
+
+    // 2. Display: Render FBO B to the screen
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.useProgram(displayProgram);
+
+    gl.uniform1i(gl.getUniformLocation(displayProgram, "u_texture"), 0);
+    gl.bindTexture(gl.TEXTURE_2D, fboB.texture);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    // 3. Swap framebuffers for the next frame (Ping-Pong)
+    let temp = fboA;
+    fboA = fboB;
+    fboB = temp;
+
+    requestAnimationFrame(render);
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    const now = performance.now();
-
-    drops = drops.filter((d) => now - d.birth < DROP_LIFETIME_MS);
-
-    drops.forEach((d) => {
-      const age = now - d.birth;
-      const spreadP = easeOutCubic(Math.min(age / SPREAD_MS, 1));
-      const radius = d.maxRadius * spreadP;
-      const fadeP = Math.min(age / DROP_LIFETIME_MS, 1);
-      const alpha = BASE_ALPHA * Math.pow(1 - fadeP, 1.6);
-
-      if (alpha <= 0.004 || radius <= 0) return;
-
-      const [r, g, b] = d.color;
-      d.blots.forEach((blot) => {
-        const cx = d.x + blot.dx * spreadP;
-        const cy = d.y + blot.dy * spreadP;
-        const rad = Math.max(radius * blot.rRatio, 1);
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
-        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
-        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    });
-
-    requestAnimationFrame(draw);
-  }
-
-  requestAnimationFrame(draw);
+  requestAnimationFrame(render);
 }
