@@ -175,18 +175,18 @@ function setupPaintCanvas() {
   const MIN_MOVE_DIST = 38; // px the pointer must travel before a new drop spawns
   const MIN_SPAWN_INTERVAL_MS = 130; // floor on how often drops can land, even if flicked fast
   const MAX_ACTIVE_DROPS = 55; // safety cap so a fast flick can't flood the canvas
-  const BASE_ALPHA = 0.22; // low on purpose — colors should tint the white, not cover it
+  const BASE_ALPHA = 0.4; // visible, but still meant to tint rather than cover
  
   const COLOR_HOLD_MS = 6000; // how long a color stays in charge before shifting
   const COLOR_TRANSITION_MS = 2200; // how long the slow crossfade to the next color takes
  
-  // Pastel, not saturated — these are meant to barely tint the page.
+  // Soft, not neon — but with enough saturation to actually read against white.
   const PALETTE = [
-    [185, 164, 247],  // pale violet
-    [248, 180, 217],  // pale pink
-    [155, 232, 201],  // pale green
-    [169, 199, 247],  // pale blue
-    [251, 200, 163],  // pale coral
+    [168, 138, 247],  // violet
+    [247, 150, 201],  // pink
+    [120, 224, 181],  // green
+    [140, 180, 247],  // blue
+    [250, 178, 130],  // coral
   ];
  
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -319,6 +319,8 @@ function setupPaintCanvas() {
     requestAnimationFrame(draw);
   }
  
+  requestAnimationFrame(draw);
+}
   requestAnimationFrame(draw);
 }
  
