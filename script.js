@@ -38,38 +38,38 @@ const PROJECTS = [
     url: "https://github.com/Aravkataria",
   },
 ];
-
+ 
 const SKILLS = [
   "Python", "JavaScript", "C++", "HTML / CSS",
   "FastAPI", "NumPy", "Pillow", "Streamlit",
   "Arduino / ESP32", "Embedded Systems", "Git & GitHub",
 ];
-
+ 
 /* =====================================================================
    Below this line: rendering + background animation.
    No need to edit unless you want to change behavior.
    ===================================================================== */
-
+ 
 document.addEventListener("DOMContentLoaded", () => {
   wireProfileLinks();
   renderProjects();
   renderSkills();
   setYear();
   setupDockScrollSpy();
-
+ 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!reduceMotion) {
     setupPaintCanvas();
   }
 });
-
+ 
 function wireProfileLinks() {
   const linkedinEls = [document.getElementById("linkedinLink"), document.getElementById("contactLinkedin")];
   linkedinEls.forEach((el) => {
     if (!el) return;
     el.href = PROFILE.linkedin;
   });
-
+ 
   const emailEls = [document.getElementById("emailLink"), document.getElementById("contactEmail")];
   emailEls.forEach((el) => {
     if (!el) return;
@@ -77,23 +77,23 @@ function wireProfileLinks() {
   });
   const emailValue = document.querySelector("#contactEmail .contact-card-value");
   if (emailValue) emailValue.textContent = PROFILE.email;
-
+ 
   const linkedinValue = document.querySelector("#contactLinkedin .contact-card-value");
   if (linkedinValue) {
     linkedinValue.textContent = PROFILE.linkedin.replace(/^https?:\/\//, "");
   }
-
+ 
   const githubEls = [document.getElementById("ctaGithub")];
   githubEls.forEach((el) => {
     if (!el) return;
     el.href = PROFILE.github;
   });
 }
-
+ 
 function renderProjects() {
   const grid = document.getElementById("projectGrid");
   if (!grid) return;
-
+ 
   grid.innerHTML = PROJECTS.map(
     (p) => `
     <article class="project-card">
@@ -111,24 +111,24 @@ function renderProjects() {
   `
   ).join("");
 }
-
+ 
 function renderSkills() {
   const cloud = document.getElementById("skillsCloud");
   if (!cloud) return;
   cloud.innerHTML = SKILLS.map((s) => `<span class="skill-pill">${escapeHtml(s)}</span>`).join("");
 }
-
+ 
 function setYear() {
   const el = document.getElementById("year");
   if (el) el.textContent = new Date().getFullYear();
 }
-
+ 
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
 }
-
+ 
 /* ---------------------------------------------------------------------
    Scroll spy for the floating dock nav
 --------------------------------------------------------------------- */
@@ -136,10 +136,10 @@ function setupDockScrollSpy() {
   const sections = document.querySelectorAll(".section");
   const dockItems = document.querySelectorAll(".dock-item");
   if (!sections.length || !dockItems.length) return;
-
+ 
   const map = new Map();
   dockItems.forEach((item) => map.set(item.dataset.section, item));
-
+ 
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -153,10 +153,10 @@ function setupDockScrollSpy() {
     },
     { rootMargin: "-40% 0px -50% 0px", threshold: 0 }
   );
-
+ 
   sections.forEach((s) => observer.observe(s));
 }
-
+ 
 /* ---------------------------------------------------------------------
    Ink-in-water paint background
    Moving the mouse drops "ink" that blooms outward for ~1.2s then
@@ -169,13 +169,17 @@ function setupPaintCanvas() {
   const canvas = document.getElementById("paintCanvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-
+ 
   const DROP_LIFETIME_MS = 10000; // total time a drop takes to fully vanish
-  const SPREAD_MS = 1200; // time to reach full bloom radius
-  const MIN_MOVE_DIST = 16; // px the pointer must travel before a new drop spawns
-  const MAX_ACTIVE_DROPS = 90; // safety cap so a fast flick can't flood the canvas
-  const BASE_ALPHA = 0.5;
-
+  const SPREAD_MS = 1400; // time to reach full bloom radius
+  const MIN_MOVE_DIST = 38; // px the pointer must travel before a new drop spawns
+  const MIN_SPAWN_INTERVAL_MS = 130; // floor on how often drops can land, even if flicked fast
+  const MAX_ACTIVE_DROPS = 60; // safety cap so a fast flick can't flood the canvas
+  const BASE_ALPHA = 0.55;
+ 
+  const COLOR_HOLD_MS = 6000; // how long a color stays in charge before shifting
+  const COLOR_TRANSITION_MS = 2200; // how long the slow crossfade to the next color takes
+ 
   const PALETTE = [
     [124, 58, 237],  // violet
     [236, 72, 153],  // pink
@@ -183,11 +187,49 @@ function setupPaintCanvas() {
     [59, 130, 246],  // blue
     [251, 146, 60],  // coral
   ];
-
+ 
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
   let drops = [];
-  let lastX = null, lastY = null;
-
+  let lastX = null, lastY = null, lastSpawnAt = 0;
+ 
+  // Persistent color cycle: every drop born "now" reads the same slowly
+  // shifting color, instead of each drop rolling its own random one.
+  let colorOrder = shuffle(PALETTE.map((_, i) => i));
+  let colorCycleStart = performance.now();
+  let colorCursor = 0;
+ 
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+ 
+  function lerpColor(c1, c2, t) {
+    return [
+      Math.round(c1[0] + (c2[0] - c1[0]) * t),
+      Math.round(c1[1] + (c2[1] - c1[1]) * t),
+      Math.round(c1[2] + (c2[2] - c1[2]) * t),
+    ];
+  }
+ 
+  function currentColor(now) {
+    const cycleLen = COLOR_HOLD_MS + COLOR_TRANSITION_MS;
+    let elapsed = now - colorCycleStart;
+    while (elapsed >= cycleLen) {
+      colorCycleStart += cycleLen;
+      colorCursor = (colorCursor + 1) % colorOrder.length;
+      elapsed = now - colorCycleStart;
+    }
+    const from = PALETTE[colorOrder[colorCursor]];
+    const to = PALETTE[colorOrder[(colorCursor + 1) % colorOrder.length]];
+    if (elapsed <= COLOR_HOLD_MS) return from;
+    const t = (elapsed - COLOR_HOLD_MS) / COLOR_TRANSITION_MS;
+    return lerpColor(from, to, t);
+  }
+ 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = window.innerWidth * dpr;
@@ -198,32 +240,33 @@ function setupPaintCanvas() {
   }
   resize();
   window.addEventListener("resize", resize);
-
+ 
   function spawnDrop(x, y) {
     if (drops.length >= MAX_ACTIVE_DROPS) drops.shift();
-    const color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-    const maxRadius = Math.min(window.innerWidth, window.innerHeight) * (0.09 + Math.random() * 0.1);
-    const blots = [1, 2, 3].map(() => ({
-      dx: (Math.random() - 0.5) * maxRadius * 0.5,
-      dy: (Math.random() - 0.5) * maxRadius * 0.5,
-      rRatio: 0.6 + Math.random() * 0.4,
+    const color = currentColor(performance.now());
+    const maxRadius = Math.min(window.innerWidth, window.innerHeight) * (0.1 + Math.random() * 0.07);
+    const blots = [1, 2].map(() => ({
+      dx: (Math.random() - 0.5) * maxRadius * 0.22,
+      dy: (Math.random() - 0.5) * maxRadius * 0.22,
+      rRatio: 0.82 + Math.random() * 0.22,
     }));
     drops.push({ x, y, color, maxRadius, blots, birth: performance.now() });
   }
-
+ 
   function handleMove(x, y) {
+    const now = performance.now();
     if (lastX === null) {
       spawnDrop(x, y);
-      lastX = x; lastY = y;
+      lastX = x; lastY = y; lastSpawnAt = now;
       return;
     }
     const dist = Math.hypot(x - lastX, y - lastY);
-    if (dist >= MIN_MOVE_DIST) {
+    if (dist >= MIN_MOVE_DIST && now - lastSpawnAt >= MIN_SPAWN_INTERVAL_MS) {
       spawnDrop(x, y);
-      lastX = x; lastY = y;
+      lastX = x; lastY = y; lastSpawnAt = now;
     }
   }
-
+ 
   window.addEventListener(
     "mousemove",
     (e) => handleMove(e.clientX, e.clientY),
@@ -237,26 +280,26 @@ function setupPaintCanvas() {
     },
     { passive: true }
   );
-
+ 
   function easeOutCubic(p) {
     return 1 - Math.pow(1 - p, 3);
   }
-
+ 
   function draw() {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     const now = performance.now();
-
+ 
     drops = drops.filter((d) => now - d.birth < DROP_LIFETIME_MS);
-
+ 
     drops.forEach((d) => {
       const age = now - d.birth;
       const spreadP = easeOutCubic(Math.min(age / SPREAD_MS, 1));
       const radius = d.maxRadius * spreadP;
       const fadeP = Math.min(age / DROP_LIFETIME_MS, 1);
       const alpha = BASE_ALPHA * Math.pow(1 - fadeP, 1.6); // lingers, then fades slowly
-
+ 
       if (alpha <= 0.004 || radius <= 0) return;
-
+ 
       const [r, g, b] = d.color;
       d.blots.forEach((blot) => {
         const cx = d.x + blot.dx * spreadP;
@@ -271,9 +314,12 @@ function setupPaintCanvas() {
         ctx.fill();
       });
     });
-
+ 
     requestAnimationFrame(draw);
   }
+ 
+  requestAnimationFrame(draw);
+}
 
   requestAnimationFrame(draw);
 }
