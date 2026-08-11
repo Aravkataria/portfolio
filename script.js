@@ -3,39 +3,45 @@
    ===================================================================== */
 
 const PROFILE = {
-  email: "	aravkataria2009@gmail.com",          
-  linkedin: "https://linkedin.com/in/arav-kataria", 
+  email: "aravkataria2009@gmail.com",          // <-- put your real email here
+  linkedin: "https://www.linkedin.com/in/arav-kataria-59512b423/", // <-- put your LinkedIn URL here
   github: "https://github.com/Aravkataria",
 };
+// NOTE on the message form below: it delivers to PROFILE.email via
+// FormSubmit (formsubmit.co) — free, no signup, no backend needed.
+// The FIRST message ever sent will trigger a one-time confirmation
+// email from FormSubmit to that address — you must click the link in
+// it once before messages start arriving in your inbox. Every message
+// after that just shows up normally.
 
 const PROJECTS = [
   {
     name: "Arch-Ai-Tex",
     description:
-      "Generates house floor plans from inputs like area and room count, with a sidebar chatbot. Rebuilding that chatbot as a small language model trained from scratch instead of an external API.",
-    tags: ["Python", "Streamlit", "SLM"],
+      "Generates house floor plans from area, room count, and plot shape using a GAN, with a Random Forest model estimating room layouts and an FCN-ResNet50 segmentation model marking walls. Also has a real-time mode where an ESP32 + ultrasonic/PIR sensors measure a room and feed dimensions straight into the generator. Rebuilding the sidebar chatbot as a small language model trained from scratch instead of an external API.",
+    tags: ["Python", "PyTorch", "Streamlit", "GAN"],
     url: "https://github.com/Aravkataria/Arch-Ai-Tex",
   },
   {
     name: "LumiDesk",
     description:
-      "ESP32 + OLED desk display for whatever's currently playing. Reads Windows' media session API directly — works with Spotify, YouTube, or any app, no OAuth or rate limits.",
+      "ESP32 + OLED desk display for whatever's currently playing. Reads Windows' media session API directly — works with Spotify, YouTube, or any app, no OAuth or rate limits. Backend fetches synced lyrics from LRCLIB and serves them alongside track/progress data over local HTTP; firmware is split into manager classes for the display, animations, and marquee scrolling.",
     tags: ["ESP32", "C++", "FastAPI", "Python"],
     url: "https://github.com/Aravkataria/LumiDesk",
   },
   {
     name: "Pyramid Compress",
     description:
-      "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction. Ships as a Python CLI and a drag-and-drop web app.",
+      "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction and PSNR reporting to measure quality loss. Ships as a Python CLI and a drag-and-drop web app — both run entirely client-side/local, no images ever leave the device.",
     tags: ["Python", "NumPy", "Pillow", "JavaScript"],
     url: "https://github.com/Aravkataria/pyramid-compression",
   },
   {
-    name: "Ultrasonic Radar",
+    name: "GAN Loss Landscape",
     description:
-      "DIY 2D spatial mapper — an ultrasonic sensor sweeps 180 degrees on a servo, converting polar readings into a live X/Y point-cloud.",
-    tags: ["Arduino", "ESP32", "Embedded"],
-    url: "https://github.com/Aravkataria",
+      "Visualizes the loss landscape of a trained GAN by perturbing its parameters along two random directions and plotting the resulting surface — 2D contour maps, 3D meshes, and 1D slices — at adjustable grid resolutions, to see how flat or sharp the learned minima actually are.",
+    tags: ["Python", "PyTorch", "Matplotlib"],
+    url: "https://github.com/Aravkataria/GAN-loss-landscape-visualization",
   },
 ];
 
@@ -51,17 +57,42 @@ const SKILLS = [
    ===================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Each step runs independently — if one throws, it's logged to the
+  // console but every other feature (projects, skills, background,
+  // nav) still initializes instead of the whole page going dark.
   safeRun("wireProfileLinks", wireProfileLinks);
   safeRun("renderProjects", renderProjects);
   safeRun("renderSkills", renderSkills);
   safeRun("setYear", setYear);
   safeRun("setupDockScrollSpy", setupDockScrollSpy);
+  safeRun("setupMessageForm", setupMessageForm);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!reduceMotion) {
-    safeRun("setupPaintCanvas", setupPaintCanvas);
+    safeRun("initBackground", initBackground);
   }
 });
+
+// Tries the real WebGL fluid simulation first (best look — actual swirling
+// fluid dynamics). If WebGL2 or the float-texture extensions it needs
+// aren't available, or setup fails for any reason, it falls back to the
+// canvas 2D ink-drop system, which is fully self-contained and proven.
+function initBackground() {
+  const canvas = document.getElementById("paintCanvas");
+  if (!canvas) return;
+
+  let usedFluidSim = false;
+  try {
+    usedFluidSim = setupFluidBackground(canvas);
+  } catch (err) {
+    console.error("[portfolio] WebGL fluid background failed, falling back to canvas:", err);
+    usedFluidSim = false;
+  }
+
+  if (!usedFluidSim) {
+    setupPaintCanvas(canvas);
+  }
+}
 
 function safeRun(label, fn) {
   try {
@@ -138,6 +169,90 @@ function escapeHtml(str) {
 }
 
 /* ---------------------------------------------------------------------
+   Message form — sends straight to PROFILE.email via FormSubmit
+   (formsubmit.co), a free no-signup email-forwarding service. No
+   backend of your own required. See the NOTE near PROFILE at the top
+   of this file about the one-time confirmation email.
+--------------------------------------------------------------------- */
+function setupMessageForm() {
+  const form = document.getElementById("messageForm");
+  if (!form) return;
+
+  const status = document.getElementById("messageFormStatus");
+  const submitBtn = document.getElementById("messageFormSubmit");
+  const nameEl = document.getElementById("msgName");
+  const emailEl = document.getElementById("msgEmail");
+  const messageEl = document.getElementById("msgMessage");
+  const honeyEl = form.querySelector('[name="_honey"]');
+
+  function setStatus(text, state) {
+    status.textContent = text;
+    if (state) status.setAttribute("data-state", state);
+    else status.removeAttribute("data-state");
+  }
+
+  function mailtoFallbackLink(name, email, message) {
+    const subject = encodeURIComponent(`Portfolio message from ${name}`);
+    const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
+    return `mailto:${PROFILE.email}?subject=${subject}&body=${body}`;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const name = nameEl.value.trim();
+    const email = emailEl.value.trim();
+    const message = messageEl.value.trim();
+
+    // Honeypot: real visitors never fill this in. If it's filled,
+    // pretend to succeed without actually sending anything.
+    if (honeyEl && honeyEl.value) {
+      form.reset();
+      setStatus("Message sent — thanks!", "success");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalLabel = submitBtn.querySelector(".btn--send-label").textContent;
+    submitBtn.querySelector(".btn--send-label").textContent = "Sending…";
+    setStatus("");
+
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(PROFILE.email)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          _subject: `Portfolio message from ${name}`,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`FormSubmit responded ${res.status}`);
+
+      form.reset();
+      setStatus("Message sent — thanks, I'll get back to you.", "success");
+    } catch (err) {
+      console.error("[portfolio] message form send failed:", err);
+      const fallback = mailtoFallbackLink(name, email, message);
+      status.innerHTML =
+        `Couldn't send automatically. ` +
+        `<a href="${fallback}">Click here to email me directly</a> — your message is filled in.`;
+      status.setAttribute("data-state", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.querySelector(".btn--send-label").textContent = originalLabel;
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
    Scroll spy for the floating dock nav
 --------------------------------------------------------------------- */
 function setupDockScrollSpy() {
@@ -168,34 +283,685 @@ function setupDockScrollSpy() {
 
 /* ---------------------------------------------------------------------
    Ink-in-water paint background
+   Moving the mouse drops "ink" that blooms outward for ~1.2s then
+   lingers and slowly fades over ~10s. Stop moving and everything
+   already on screen finishes fading out on its own, back to white.
+   The canvas itself is CSS-blurred + multiply-blended (see style.css)
+   so overlapping drops mix like real pigment instead of stacking flat.
 --------------------------------------------------------------------- */
-function setupPaintCanvas() {
-  const canvas = document.getElementById("paintCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+/* ---------------------------------------------------------------------
+   WebGL fluid simulation background
+   A real Navier–Stokes fluid solver (advection, pressure projection,
+   vorticity confinement) running on the GPU. Moving the mouse injects
+   velocity + color ("dye") into the fluid; it naturally swirls, curls,
+   and dissipates back to nothing on its own — no hand-timed fade logic
+   needed, the physics does it. Dye is stored as "ink absorbed from
+   white paper" (see the display shader) so it composites correctly
+   against the page's white background without extra blend tricks.
 
-  const DROP_LIFETIME_MS = 10000;
-  const SPREAD_MS = 1400;
-  const MIN_MOVE_DIST = 38;
-  const MIN_SPAWN_INTERVAL_MS = 130;
-  const MAX_ACTIVE_DROPS = 55;
-  const BASE_ALPHA = 0.4;
+   Returns true if it successfully took over the canvas, false if this
+   browser/GPU can't support it — the caller falls back to the canvas
+   2D version in that case.
+--------------------------------------------------------------------- */
+function setupFluidBackground(originalCanvas) {
+  const glCanvas = document.createElement("canvas");
+  glCanvas.className = "paint-canvas paint-canvas--gl";
+  glCanvas.id = originalCanvas.id;
+  glCanvas.setAttribute("aria-hidden", "true");
+
+  const gl = glCanvas.getContext("webgl2", {
+    alpha: true,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    preserveDrawingBuffer: false,
+  });
+  if (!gl) return false;
+
+  const floatExt = gl.getExtension("EXT_color_buffer_float");
+  const halfFloatExt = !floatExt && gl.getExtension("EXT_color_buffer_half_float");
+  if (!floatExt && !halfFloatExt) return false;
+  const texType = floatExt ? gl.FLOAT : gl.HALF_FLOAT;
+  const internalFormat = floatExt ? gl.RGBA32F : gl.RGBA16F; // must match texType or texImage2D is invalid
+  const linearExt =
+    gl.getExtension("OES_texture_float_linear") || gl.getExtension("OES_texture_half_float_linear");
+  const filtering = linearExt ? gl.LINEAR : gl.NEAREST;
+
+  // --- config -----------------------------------------------------------
+  const SIM_RESOLUTION = 128;
+  const DYE_RESOLUTION = 640;
+  const DENSITY_DISSIPATION = 1.05; // dye fade rate — settles to white in a handful of seconds once idle
+  const VELOCITY_DISSIPATION = 0.4; // how quickly motion itself settles
+  const PRESSURE_DISSIPATION = 0.8;
+  const PRESSURE_ITERATIONS = 20;
+  const CURL = 22; // swirliness
+  const SPLAT_RADIUS = 0.22;
+  const SPLAT_FORCE = 4200;
+  const MAX_ABSORPTION = 0.78; // hard cap — background can never get darker than this, so text stays readable
+  const DYE_STRENGTH = 0.55; // scales how much color a single splat injects
+  const MIN_SPLAT_INTERVAL_MS = 40; // floor on how often mouse movement can inject color, even moving fast
 
   const COLOR_HOLD_MS = 6000;
   const COLOR_TRANSITION_MS = 2200;
-
   const PALETTE = [
-    [168, 138, 247],
-    [247, 150, 201],
-    [120, 224, 181],
-    [140, 180, 247],
-    [250, 178, 130],
+    [168 / 255, 138 / 255, 247 / 255], // violet
+    [247 / 255, 150 / 255, 201 / 255], // pink
+    [120 / 255, 224 / 255, 181 / 255], // green
+    [140 / 255, 180 / 255, 247 / 255], // blue
+    [250 / 255, 178 / 255, 130 / 255], // coral
+  ];
+
+  // --- shader helpers -----------------------------------------------------
+  function compileShader(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const info = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error("Shader compile error: " + info);
+    }
+    return shader;
+  }
+
+  function createProgram(vsSource, fsSource) {
+    const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+    const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      const info = gl.getProgramInfoLog(program);
+      throw new Error("Program link error: " + info);
+    }
+    const uniforms = {};
+    const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < count; i++) {
+      const info = gl.getActiveUniform(program, i);
+      uniforms[info.name] = gl.getUniformLocation(program, info.name);
+    }
+    return { program, uniforms };
+  }
+
+  const baseVertexShader = `#version 300 es
+    precision highp float;
+    layout(location = 0) in vec2 aPosition;
+    out vec2 vUv;
+    out vec2 vL;
+    out vec2 vR;
+    out vec2 vT;
+    out vec2 vB;
+    uniform vec2 texelSize;
+    void main () {
+      vUv = aPosition * 0.5 + 0.5;
+      vL = vUv - vec2(texelSize.x, 0.0);
+      vR = vUv + vec2(texelSize.x, 0.0);
+      vT = vUv + vec2(0.0, texelSize.y);
+      vB = vUv - vec2(0.0, texelSize.y);
+      gl_Position = vec4(aPosition, 0.0, 1.0);
+    }
+  `;
+
+  function frag(body) {
+    return `#version 300 es
+      precision highp float;
+      precision highp sampler2D;
+      in vec2 vUv;
+      in vec2 vL;
+      in vec2 vR;
+      in vec2 vT;
+      in vec2 vB;
+      out vec4 fragColor;
+      ${body}
+    `;
+  }
+
+  const splatProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uTarget;
+      uniform float aspectRatio;
+      uniform vec3 color;
+      uniform vec2 point;
+      uniform float radius;
+      void main () {
+        vec2 p = vUv - point;
+        p.x *= aspectRatio;
+        vec3 splat = exp(-dot(p, p) / radius) * color;
+        vec3 base = texture(uTarget, vUv).xyz;
+        fragColor = vec4(base + splat, 1.0);
+      }
+    `)
+  );
+
+  // Same as splatProgram, but hard-caps how much color/absorption can
+  // accumulate. Used only for dye (never velocity) so fast or repeated
+  // mouse movement can tint the background richly but can never push
+  // it all the way to black and swallow the text sitting on top of it.
+  const splatDyeProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uTarget;
+      uniform float aspectRatio;
+      uniform vec3 color;
+      uniform vec2 point;
+      uniform float radius;
+      uniform float maxAbsorption;
+      void main () {
+        vec2 p = vUv - point;
+        p.x *= aspectRatio;
+        vec3 splat = exp(-dot(p, p) / radius) * color;
+        vec3 base = texture(uTarget, vUv).xyz;
+        fragColor = vec4(clamp(base + splat, 0.0, maxAbsorption), 1.0);
+      }
+    `)
+  );
+
+  const advectionProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uVelocity;
+      uniform sampler2D uSource;
+      uniform vec2 texelSize;
+      uniform float dt;
+      uniform float dissipation;
+      void main () {
+        vec2 coord = vUv - dt * texture(uVelocity, vUv).xy * texelSize;
+        vec4 result = texture(uSource, coord);
+        float decay = 1.0 + dissipation * dt;
+        fragColor = result / decay;
+      }
+    `)
+  );
+
+  // Same as advectionProgram, but clamps the transported value. Applied
+  // only to the dye field each frame so the cap enforced at splat time
+  // holds over time too, not just at the instant of a splat.
+  const advectionDyeProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uVelocity;
+      uniform sampler2D uSource;
+      uniform vec2 texelSize;
+      uniform float dt;
+      uniform float dissipation;
+      uniform float maxAbsorption;
+      void main () {
+        vec2 coord = vUv - dt * texture(uVelocity, vUv).xy * texelSize;
+        vec4 result = texture(uSource, coord);
+        float decay = 1.0 + dissipation * dt;
+        fragColor = vec4(clamp((result / decay).rgb, 0.0, maxAbsorption), 1.0);
+      }
+    `)
+  );
+
+  const divergenceProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uVelocity;
+      void main () {
+        float L = texture(uVelocity, vL).x;
+        float R = texture(uVelocity, vR).x;
+        float T = texture(uVelocity, vT).y;
+        float B = texture(uVelocity, vB).y;
+        vec2 C = texture(uVelocity, vUv).xy;
+        if (vL.x < 0.0) { L = -C.x; }
+        if (vR.x > 1.0) { R = -C.x; }
+        if (vT.y > 1.0) { T = -C.y; }
+        if (vB.y < 0.0) { B = -C.y; }
+        float div = 0.5 * (R - L + T - B);
+        fragColor = vec4(div, 0.0, 0.0, 1.0);
+      }
+    `)
+  );
+
+  const curlProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uVelocity;
+      void main () {
+        float L = texture(uVelocity, vL).y;
+        float R = texture(uVelocity, vR).y;
+        float T = texture(uVelocity, vT).x;
+        float B = texture(uVelocity, vB).x;
+        float vorticity = R - L - T + B;
+        fragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
+      }
+    `)
+  );
+
+  const vorticityProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uVelocity;
+      uniform sampler2D uCurl;
+      uniform float curl;
+      uniform float dt;
+      void main () {
+        float L = texture(uCurl, vL).x;
+        float R = texture(uCurl, vR).x;
+        float T = texture(uCurl, vT).x;
+        float B = texture(uCurl, vB).x;
+        float C = texture(uCurl, vUv).x;
+        vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
+        force /= length(force) + 0.0001;
+        force *= curl * C;
+        force.y *= -1.0;
+        vec2 vel = texture(uVelocity, vUv).xy;
+        fragColor = vec4(vel + force * dt, 0.0, 1.0);
+      }
+    `)
+  );
+
+  const pressureProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uPressure;
+      uniform sampler2D uDivergence;
+      void main () {
+        float L = texture(uPressure, vL).x;
+        float R = texture(uPressure, vR).x;
+        float T = texture(uPressure, vT).x;
+        float B = texture(uPressure, vB).x;
+        float divergence = texture(uDivergence, vUv).x;
+        float pressure = (L + R + B + T - divergence) * 0.25;
+        fragColor = vec4(pressure, 0.0, 0.0, 1.0);
+      }
+    `)
+  );
+
+  const gradientSubtractProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uPressure;
+      uniform sampler2D uVelocity;
+      void main () {
+        float L = texture(uPressure, vL).x;
+        float R = texture(uPressure, vR).x;
+        float T = texture(uPressure, vT).x;
+        float B = texture(uPressure, vB).x;
+        vec2 velocity = texture(uVelocity, vUv).xy;
+        velocity -= vec2(R - L, T - B);
+        fragColor = vec4(velocity, 0.0, 1.0);
+      }
+    `)
+  );
+
+  const clearProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uTexture;
+      uniform float value;
+      void main () {
+        fragColor = value * texture(uTexture, vUv);
+      }
+    `)
+  );
+
+  // White-paper display: the "dye" texture stores light absorbed per
+  // channel, so the visible color is simply what's left of white.
+  const displayProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uTexture;
+      void main () {
+        vec3 absorption = texture(uTexture, vUv).rgb;
+        vec3 color = clamp(vec3(1.0) - absorption, 0.0, 1.0);
+        fragColor = vec4(color, 1.0);
+      }
+    `)
+  );
+
+  // --- fullscreen quad -----------------------------------------------------
+  const quadVAO = gl.createVertexArray();
+  gl.bindVertexArray(quadVAO);
+  const quadBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const elemBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, elemBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 2, 1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+
+  function blit(target) {
+    if (target == null) {
+      gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    } else {
+      gl.viewport(0, 0, target.width, target.height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+    }
+    gl.bindVertexArray(quadVAO);
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+  }
+
+  // --- framebuffers -----------------------------------------------------
+  function createFBO(w, h) {
+    gl.activeTexture(gl.TEXTURE0);
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filtering);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filtering);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, gl.RGBA, texType, null);
+
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      throw new Error("Incomplete framebuffer: " + status);
+    }
+    gl.viewport(0, 0, w, h);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    return {
+      texture,
+      fbo,
+      width: w,
+      height: h,
+      attach(id) {
+        gl.activeTexture(gl.TEXTURE0 + id);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        return id;
+      },
+    };
+  }
+
+  function createDoubleFBO(w, h) {
+    let fbo1 = createFBO(w, h);
+    let fbo2 = createFBO(w, h);
+    return {
+      width: w,
+      height: h,
+      get read() {
+        return fbo1;
+      },
+      get write() {
+        return fbo2;
+      },
+      swap() {
+        const temp = fbo1;
+        fbo1 = fbo2;
+        fbo2 = temp;
+      },
+    };
+  }
+
+  function getResolution(resolution) {
+    const aspect = glCanvas.width / glCanvas.height;
+    const aspectInv = aspect < 1 ? 1 / aspect : aspect;
+    const min = Math.round(resolution);
+    const max = Math.round(resolution * aspectInv);
+    return glCanvas.width > glCanvas.height ? { width: max, height: min } : { width: min, height: max };
+  }
+
+  let dye, velocity, divergenceFBO, curlFBO, pressure;
+
+  function initFramebuffers() {
+    const simRes = getResolution(SIM_RESOLUTION);
+    const dyeRes = getResolution(DYE_RESOLUTION);
+    dye = createDoubleFBO(dyeRes.width, dyeRes.height);
+    velocity = createDoubleFBO(simRes.width, simRes.height);
+    divergenceFBO = createFBO(simRes.width, simRes.height);
+    curlFBO = createFBO(simRes.width, simRes.height);
+    pressure = createDoubleFBO(simRes.width, simRes.height);
+  }
+
+  function resizeCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const w = Math.round(window.innerWidth * dpr);
+    const h = Math.round(window.innerHeight * dpr);
+    if (glCanvas.width !== w || glCanvas.height !== h) {
+      glCanvas.width = w;
+      glCanvas.height = h;
+      initFramebuffers();
+    }
+  }
+
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  // --- color cycle (shared "one color in charge at a time" behavior) -----
+  let colorOrder = shufflePalette();
+  let colorCycleStart = performance.now();
+  let colorCursor = 0;
+
+  function shufflePalette() {
+    const a = PALETTE.map((_, i) => i);
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function lerpColor(c1, c2, t) {
+    return [c1[0] + (c2[0] - c1[0]) * t, c1[1] + (c2[1] - c1[1]) * t, c1[2] + (c2[2] - c1[2]) * t];
+  }
+
+  function currentDisplayColor(now) {
+    const cycleLen = COLOR_HOLD_MS + COLOR_TRANSITION_MS;
+    let elapsed = now - colorCycleStart;
+    while (elapsed >= cycleLen) {
+      colorCycleStart += cycleLen;
+      colorCursor = (colorCursor + 1) % colorOrder.length;
+      elapsed = now - colorCycleStart;
+    }
+    const from = PALETTE[colorOrder[colorCursor]];
+    const to = PALETTE[colorOrder[(colorCursor + 1) % colorOrder.length]];
+    if (elapsed <= COLOR_HOLD_MS) return from;
+    return lerpColor(from, to, (elapsed - COLOR_HOLD_MS) / COLOR_TRANSITION_MS);
+  }
+
+  // --- splatting -----------------------------------------------------
+  function splat(x, y, dx, dy, color) {
+    gl.useProgram(splatProgram.program);
+    gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
+    gl.uniform1f(splatProgram.uniforms.aspectRatio, glCanvas.width / glCanvas.height);
+    gl.uniform2f(splatProgram.uniforms.point, x, y);
+    gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0);
+    gl.uniform1f(splatProgram.uniforms.radius, SPLAT_RADIUS / 100.0);
+    blit(velocity.write);
+    velocity.swap();
+
+    // dye stores absorption = (white - color) * strength, so displaying
+    // it as 1 - absorption later reproduces a tint of the intended
+    // pastel color. Clamped so no amount of overlapping/fast movement
+    // can push it toward black and swallow the text on top of it.
+    gl.useProgram(splatDyeProgram.program);
+    gl.uniform1i(splatDyeProgram.uniforms.uTarget, dye.read.attach(0));
+    gl.uniform1f(splatDyeProgram.uniforms.aspectRatio, glCanvas.width / glCanvas.height);
+    gl.uniform2f(splatDyeProgram.uniforms.point, x, y);
+    gl.uniform3f(
+      splatDyeProgram.uniforms.color,
+      (1.0 - color[0]) * DYE_STRENGTH,
+      (1.0 - color[1]) * DYE_STRENGTH,
+      (1.0 - color[2]) * DYE_STRENGTH
+    );
+    gl.uniform1f(splatDyeProgram.uniforms.radius, SPLAT_RADIUS / 100.0);
+    gl.uniform1f(splatDyeProgram.uniforms.maxAbsorption, MAX_ABSORPTION);
+    blit(dye.write);
+    dye.swap();
+  }
+
+  let pointer = { x: 0, y: 0, lastX: 0, lastY: 0, moved: false, down: false };
+  let lastSplatAt = 0;
+
+  function toSimCoords(clientX, clientY) {
+    const rect = glCanvas.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left) / rect.width,
+      y: 1.0 - (clientY - rect.top) / rect.height,
+    };
+  }
+
+  function onPointerMove(clientX, clientY) {
+    const p = toSimCoords(clientX, clientY);
+    if (!pointer.down) {
+      pointer.lastX = p.x;
+      pointer.lastY = p.y;
+      pointer.down = true;
+      return;
+    }
+    const dx = (p.x - pointer.lastX) * SPLAT_FORCE;
+    const dy = (p.y - pointer.lastY) * SPLAT_FORCE;
+    pointer.lastX = p.x;
+    pointer.lastY = p.y;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+
+    // Throttle: without this, fast mouse movement fires a splat on
+    // nearly every mousemove event (often 60-100+/sec), which piles up
+    // color far faster than intended regardless of any single-splat cap.
+    const now = performance.now();
+    if (now - lastSplatAt < MIN_SPLAT_INTERVAL_MS) return;
+    lastSplatAt = now;
+
+    splat(p.x, p.y, dx, dy, currentDisplayColor(now));
+  }
+
+  window.addEventListener(
+    "mousemove",
+    (e) => onPointerMove(e.clientX, e.clientY),
+    { passive: true }
+  );
+  window.addEventListener(
+    "touchmove",
+    (e) => {
+      const t = e.touches[0];
+      if (t) onPointerMove(t.clientX, t.clientY);
+    },
+    { passive: true }
+  );
+  window.addEventListener("mouseleave", () => {
+    pointer.down = false;
+  });
+
+  // --- main loop -----------------------------------------------------
+  let lastTime = performance.now();
+
+  function step(dt) {
+    gl.disable(gl.BLEND);
+
+    gl.viewport(0, 0, velocity.width, velocity.height);
+
+    gl.useProgram(curlProgram.program);
+    gl.uniform2f(curlProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(curlProgram.uniforms.uVelocity, velocity.read.attach(0));
+    blit(curlFBO);
+
+    gl.useProgram(vorticityProgram.program);
+    gl.uniform2f(vorticityProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(vorticityProgram.uniforms.uVelocity, velocity.read.attach(0));
+    gl.uniform1i(vorticityProgram.uniforms.uCurl, curlFBO.attach(1));
+    gl.uniform1f(vorticityProgram.uniforms.curl, CURL);
+    gl.uniform1f(vorticityProgram.uniforms.dt, dt);
+    blit(velocity.write);
+    velocity.swap();
+
+    gl.useProgram(divergenceProgram.program);
+    gl.uniform2f(divergenceProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(divergenceProgram.uniforms.uVelocity, velocity.read.attach(0));
+    blit(divergenceFBO);
+
+    gl.useProgram(clearProgram.program);
+    gl.uniform1i(clearProgram.uniforms.uTexture, pressure.read.attach(0));
+    gl.uniform1f(clearProgram.uniforms.value, PRESSURE_DISSIPATION);
+    blit(pressure.write);
+    pressure.swap();
+
+    gl.useProgram(pressureProgram.program);
+    gl.uniform2f(pressureProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(pressureProgram.uniforms.uDivergence, divergenceFBO.attach(0));
+    for (let i = 0; i < PRESSURE_ITERATIONS; i++) {
+      gl.uniform1i(pressureProgram.uniforms.uPressure, pressure.read.attach(1));
+      blit(pressure.write);
+      pressure.swap();
+    }
+
+    gl.useProgram(gradientSubtractProgram.program);
+    gl.uniform2f(gradientSubtractProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(gradientSubtractProgram.uniforms.uPressure, pressure.read.attach(0));
+    gl.uniform1i(gradientSubtractProgram.uniforms.uVelocity, velocity.read.attach(1));
+    blit(velocity.write);
+    velocity.swap();
+
+    gl.useProgram(advectionProgram.program);
+    gl.uniform2f(advectionProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
+    gl.uniform1i(advectionProgram.uniforms.uSource, velocity.read.attach(0));
+    gl.uniform1f(advectionProgram.uniforms.dt, dt);
+    gl.uniform1f(advectionProgram.uniforms.dissipation, VELOCITY_DISSIPATION);
+    blit(velocity.write);
+    velocity.swap();
+
+    gl.viewport(0, 0, dye.width, dye.height);
+    gl.useProgram(advectionDyeProgram.program);
+    gl.uniform2f(advectionDyeProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(advectionDyeProgram.uniforms.uVelocity, velocity.read.attach(0));
+    gl.uniform1i(advectionDyeProgram.uniforms.uSource, dye.read.attach(1));
+    gl.uniform1f(advectionDyeProgram.uniforms.dt, dt);
+    gl.uniform1f(advectionDyeProgram.uniforms.dissipation, DENSITY_DISSIPATION);
+    gl.uniform1f(advectionDyeProgram.uniforms.maxAbsorption, MAX_ABSORPTION);
+    blit(dye.write);
+    dye.swap();
+  }
+
+  function render() {
+    gl.useProgram(displayProgram.program);
+    gl.uniform1i(displayProgram.uniforms.uTexture, dye.read.attach(0));
+    blit(null);
+  }
+
+  function frame(now) {
+    const dt = Math.min((now - lastTime) / 1000, 1 / 30);
+    lastTime = now;
+    step(dt);
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // Everything above ran without throwing, so this browser/GPU can
+  // actually do it — commit to swapping the canvas into the page.
+  originalCanvas.replaceWith(glCanvas);
+  requestAnimationFrame(frame);
+  return true;
+}
+
+function setupPaintCanvas(canvasArg) {
+  const canvas = canvasArg || document.getElementById("paintCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  const DROP_LIFETIME_MS = 10000; // total time a drop takes to fully vanish
+  const SPREAD_MS = 1400; // time to reach full bloom radius
+  const MIN_MOVE_DIST = 38; // px the pointer must travel before a new drop spawns
+  const MIN_SPAWN_INTERVAL_MS = 130; // floor on how often drops can land, even if flicked fast
+  const MAX_ACTIVE_DROPS = 55; // safety cap so a fast flick can't flood the canvas
+  const BASE_ALPHA = 0.4; // visible, but still meant to tint rather than cover
+
+  const COLOR_HOLD_MS = 6000; // how long a color stays in charge before shifting
+  const COLOR_TRANSITION_MS = 2200; // how long the slow crossfade to the next color takes
+
+  // Soft, not neon — but with enough saturation to actually read against white.
+  const PALETTE = [
+    [168, 138, 247],  // violet
+    [247, 150, 201],  // pink
+    [120, 224, 181],  // green
+    [140, 180, 247],  // blue
+    [250, 178, 130],  // coral
   ];
 
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
   let drops = [];
   let lastX = null, lastY = null, lastSpawnAt = 0;
 
+  // Persistent color cycle: every drop born "now" reads the same slowly
+  // shifting color, instead of each drop rolling its own random one.
   let colorOrder = shuffle(PALETTE.map((_, i) => i));
   let colorCycleStart = performance.now();
   let colorCursor = 0;
@@ -298,7 +1064,7 @@ function setupPaintCanvas() {
       const spreadP = easeOutCubic(Math.min(age / SPREAD_MS, 1));
       const radius = d.maxRadius * spreadP;
       const fadeP = Math.min(age / DROP_LIFETIME_MS, 1);
-      const alpha = BASE_ALPHA * Math.pow(1 - fadeP, 1.6);
+      const alpha = BASE_ALPHA * Math.pow(1 - fadeP, 1.6); // lingers, then fades slowly
 
       if (alpha <= 0.004 || radius <= 0) return;
 
