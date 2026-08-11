@@ -1147,6 +1147,9 @@ function setupFluidBackground(originalCanvas) {
   const CURL = 22; // swirliness
   const SPLAT_RADIUS = 0.22;
   const SPLAT_FORCE = 4200;
+  const MAX_ABSORPTION = 0.78; // hard cap — background can never get darker than this, so text stays readable
+  const DYE_STRENGTH = 0.55; // scales how much color a single splat injects
+  const MIN_SPLAT_INTERVAL_MS = 40; // floor on how often mouse movement can inject color, even moving fast
 
   const COLOR_HOLD_MS = 6000;
   const COLOR_TRANSITION_MS = 2200;
@@ -1242,6 +1245,29 @@ function setupFluidBackground(originalCanvas) {
     `)
   );
 
+  // Same as splatProgram, but hard-caps how much color/absorption can
+  // accumulate. Used only for dye (never velocity) so fast or repeated
+  // mouse movement can tint the background richly but can never push
+  // it all the way to black and swallow the text sitting on top of it.
+  const splatDyeProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uTarget;
+      uniform float aspectRatio;
+      uniform vec3 color;
+      uniform vec2 point;
+      uniform float radius;
+      uniform float maxAbsorption;
+      void main () {
+        vec2 p = vUv - point;
+        p.x *= aspectRatio;
+        vec3 splat = exp(-dot(p, p) / radius) * color;
+        vec3 base = texture(uTarget, vUv).xyz;
+        fragColor = vec4(clamp(base + splat, 0.0, maxAbsorption), 1.0);
+      }
+    `)
+  );
+
   const advectionProgram = createProgram(
     baseVertexShader,
     frag(`
@@ -1255,6 +1281,27 @@ function setupFluidBackground(originalCanvas) {
         vec4 result = texture(uSource, coord);
         float decay = 1.0 + dissipation * dt;
         fragColor = result / decay;
+      }
+    `)
+  );
+
+  // Same as advectionProgram, but clamps the transported value. Applied
+  // only to the dye field each frame so the cap enforced at splat time
+  // holds over time too, not just at the instant of a splat.
+  const advectionDyeProgram = createProgram(
+    baseVertexShader,
+    frag(`
+      uniform sampler2D uVelocity;
+      uniform sampler2D uSource;
+      uniform vec2 texelSize;
+      uniform float dt;
+      uniform float dissipation;
+      uniform float maxAbsorption;
+      void main () {
+        vec2 coord = vUv - dt * texture(uVelocity, vUv).xy * texelSize;
+        vec4 result = texture(uSource, coord);
+        float decay = 1.0 + dissipation * dt;
+        fragColor = vec4(clamp((result / decay).rgb, 0.0, maxAbsorption), 1.0);
       }
     `)
   );
@@ -1532,15 +1579,28 @@ function setupFluidBackground(originalCanvas) {
     blit(velocity.write);
     velocity.swap();
 
-    gl.uniform1i(splatProgram.uniforms.uTarget, dye.read.attach(0));
-    // dye stores absorption = (white - color), so displaying it as
-    // 1 - absorption later reproduces the intended pastel color.
-    gl.uniform3f(splatProgram.uniforms.color, 1.0 - color[0], 1.0 - color[1], 1.0 - color[2]);
+    // dye stores absorption = (white - color) * strength, so displaying
+    // it as 1 - absorption later reproduces a tint of the intended
+    // pastel color. Clamped so no amount of overlapping/fast movement
+    // can push it toward black and swallow the text on top of it.
+    gl.useProgram(splatDyeProgram.program);
+    gl.uniform1i(splatDyeProgram.uniforms.uTarget, dye.read.attach(0));
+    gl.uniform1f(splatDyeProgram.uniforms.aspectRatio, glCanvas.width / glCanvas.height);
+    gl.uniform2f(splatDyeProgram.uniforms.point, x, y);
+    gl.uniform3f(
+      splatDyeProgram.uniforms.color,
+      (1.0 - color[0]) * DYE_STRENGTH,
+      (1.0 - color[1]) * DYE_STRENGTH,
+      (1.0 - color[2]) * DYE_STRENGTH
+    );
+    gl.uniform1f(splatDyeProgram.uniforms.radius, SPLAT_RADIUS / 100.0);
+    gl.uniform1f(splatDyeProgram.uniforms.maxAbsorption, MAX_ABSORPTION);
     blit(dye.write);
     dye.swap();
   }
 
   let pointer = { x: 0, y: 0, lastX: 0, lastY: 0, moved: false, down: false };
+  let lastSplatAt = 0;
 
   function toSimCoords(clientX, clientY) {
     const rect = glCanvas.getBoundingClientRect();
@@ -1563,7 +1623,15 @@ function setupFluidBackground(originalCanvas) {
     pointer.lastX = p.x;
     pointer.lastY = p.y;
     if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
-    splat(p.x, p.y, dx, dy, currentDisplayColor(performance.now()));
+
+    // Throttle: without this, fast mouse movement fires a splat on
+    // nearly every mousemove event (often 60-100+/sec), which piles up
+    // color far faster than intended regardless of any single-splat cap.
+    const now = performance.now();
+    if (now - lastSplatAt < MIN_SPLAT_INTERVAL_MS) return;
+    lastSplatAt = now;
+
+    splat(p.x, p.y, dx, dy, currentDisplayColor(now));
   }
 
   window.addEventListener(
@@ -1642,9 +1710,13 @@ function setupFluidBackground(originalCanvas) {
     velocity.swap();
 
     gl.viewport(0, 0, dye.width, dye.height);
-    gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
-    gl.uniform1i(advectionProgram.uniforms.uSource, dye.read.attach(1));
-    gl.uniform1f(advectionProgram.uniforms.dissipation, DENSITY_DISSIPATION);
+    gl.useProgram(advectionDyeProgram.program);
+    gl.uniform2f(advectionDyeProgram.uniforms.texelSize, 1.0 / velocity.width, 1.0 / velocity.height);
+    gl.uniform1i(advectionDyeProgram.uniforms.uVelocity, velocity.read.attach(0));
+    gl.uniform1i(advectionDyeProgram.uniforms.uSource, dye.read.attach(1));
+    gl.uniform1f(advectionDyeProgram.uniforms.dt, dt);
+    gl.uniform1f(advectionDyeProgram.uniforms.dissipation, DENSITY_DISSIPATION);
+    gl.uniform1f(advectionDyeProgram.uniforms.maxAbsorption, MAX_ABSORPTION);
     blit(dye.write);
     dye.swap();
   }
