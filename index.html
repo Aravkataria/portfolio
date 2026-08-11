@@ -442,6 +442,116 @@ main {
 }
 
 /* =========================================================
+   MESSAGE FORM
+========================================================= */
+.message-form {
+  margin-top: 18px;
+  padding: 28px;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.field .required {
+  color: var(--green);
+}
+
+.field input,
+.field textarea {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  resize: vertical;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #a8a8b3;
+}
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  background: #fff;
+}
+.field input:invalid:not(:placeholder-shown),
+.field textarea:invalid:not(:placeholder-shown) {
+  border-color: #e0796f;
+}
+
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.message-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.form-note {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.btn--send {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green);
+  color: #06301f;
+}
+.btn--send:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35);
+}
+.btn--send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.form-status {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  min-height: 1.2em;
+}
+.form-status[data-state="success"] { color: var(--green); }
+.form-status[data-state="error"] { color: #c2564a; }
+
+/* =========================================================
    FOOTER
 ========================================================= */
 .footer {
@@ -635,6 +745,36 @@ button:focus-visible {
           <span class="contact-card-value">Add your profile link</span>
         </a>
       </div>
+
+      <form class="message-form" id="messageForm" novalidate>
+        <div class="field">
+          <label for="msgName">Name <span class="required">*</span></label>
+          <input type="text" id="msgName" name="name" autocomplete="name" required />
+        </div>
+
+        <div class="field">
+          <label for="msgEmail">Email <span class="required">*</span></label>
+          <input type="email" id="msgEmail" name="email" autocomplete="email" required />
+        </div>
+
+        <div class="field">
+          <label for="msgMessage">Message <span class="required">*</span></label>
+          <textarea id="msgMessage" name="message" rows="5" placeholder="What are you building?" required></textarea>
+        </div>
+
+        <!-- honeypot — hidden from real people, catches basic bots -->
+        <input type="text" name="_honey" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <div class="message-form-footer">
+          <span class="form-note">sent straight to my inbox</span>
+          <button type="submit" class="btn btn--send" id="messageFormSubmit">
+            <span class="btn--send-label">Send message</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <p class="form-status" id="messageFormStatus" role="status" aria-live="polite"></p>
+      </form>
     </section>
 
     <footer class="footer">
@@ -677,6 +817,12 @@ const PROFILE = {
   linkedin: "https://linkedin.com/in/arav-kataria", // <-- put your LinkedIn URL here
   github: "https://github.com/Aravkataria",
 };
+// NOTE on the message form below: it delivers to PROFILE.email via
+// FormSubmit (formsubmit.co) — free, no signup, no backend needed.
+// The FIRST message ever sent will trigger a one-time confirmation
+// email from FormSubmit to that address — you must click the link in
+// it once before messages start arriving in your inbox. Every message
+// after that just shows up normally.
 
 const PROJECTS = [
   {
@@ -729,6 +875,7 @@ document.addEventListener("DOMContentLoaded", () => {
   safeRun("renderSkills", renderSkills);
   safeRun("setYear", setYear);
   safeRun("setupDockScrollSpy", setupDockScrollSpy);
+  safeRun("setupMessageForm", setupMessageForm);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!reduceMotion) {
@@ -829,6 +976,90 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+   Message form — sends straight to PROFILE.email via FormSubmit
+   (formsubmit.co), a free no-signup email-forwarding service. No
+   backend of your own required. See the NOTE near PROFILE at the top
+   of this file about the one-time confirmation email.
+--------------------------------------------------------------------- */
+function setupMessageForm() {
+  const form = document.getElementById("messageForm");
+  if (!form) return;
+
+  const status = document.getElementById("messageFormStatus");
+  const submitBtn = document.getElementById("messageFormSubmit");
+  const nameEl = document.getElementById("msgName");
+  const emailEl = document.getElementById("msgEmail");
+  const messageEl = document.getElementById("msgMessage");
+  const honeyEl = form.querySelector('[name="_honey"]');
+
+  function setStatus(text, state) {
+    status.textContent = text;
+    if (state) status.setAttribute("data-state", state);
+    else status.removeAttribute("data-state");
+  }
+
+  function mailtoFallbackLink(name, email, message) {
+    const subject = encodeURIComponent(`Portfolio message from ${name}`);
+    const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
+    return `mailto:${PROFILE.email}?subject=${subject}&body=${body}`;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const name = nameEl.value.trim();
+    const email = emailEl.value.trim();
+    const message = messageEl.value.trim();
+
+    // Honeypot: real visitors never fill this in. If it's filled,
+    // pretend to succeed without actually sending anything.
+    if (honeyEl && honeyEl.value) {
+      form.reset();
+      setStatus("Message sent — thanks!", "success");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalLabel = submitBtn.querySelector(".btn--send-label").textContent;
+    submitBtn.querySelector(".btn--send-label").textContent = "Sending…";
+    setStatus("");
+
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(PROFILE.email)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          _subject: `Portfolio message from ${name}`,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`FormSubmit responded ${res.status}`);
+
+      form.reset();
+      setStatus("Message sent — thanks, I'll get back to you.", "success");
+    } catch (err) {
+      console.error("[portfolio] message form send failed:", err);
+      const fallback = mailtoFallbackLink(name, email, message);
+      status.innerHTML =
+        `Couldn't send automatically. ` +
+        `<a href="${fallback}">Click here to email me directly</a> — your message is filled in.`;
+      status.setAttribute("data-state", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.querySelector(".btn--send-label").textContent = originalLabel;
+    }
+  });
 }
 
 /* ---------------------------------------------------------------------
