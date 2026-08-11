@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   safeRun("setYear", setYear);
   safeRun("setupDockScrollSpy", setupDockScrollSpy);
   safeRun("setupMessageForm", setupMessageForm);
+  safeRun("setupThemeToggle", setupThemeToggle);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!reduceMotion) {
@@ -930,6 +931,54 @@ function setupFluidBackground(originalCanvas) {
   originalCanvas.replaceWith(glCanvas);
   requestAnimationFrame(frame);
   return true;
+}
+
+/* ---------------------------------------------------------------------
+   Theme toggle (light / dark)
+   Only swaps CSS custom properties via the data-theme attribute — no
+   other behavior on the page changes. Preference is saved so it
+   sticks across visits; the inline snippet in <head> applies it
+   before first paint to avoid a flash of the wrong theme.
+--------------------------------------------------------------------- */
+function setupThemeToggle() {
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+
+  const root = document.documentElement;
+
+  function isDark() {
+    return root.getAttribute("data-theme") === "dark";
+  }
+
+  function apply(dark) {
+    if (dark) {
+      root.setAttribute("data-theme", "dark");
+    } else {
+      root.removeAttribute("data-theme");
+    }
+    btn.setAttribute("aria-pressed", String(dark));
+  }
+
+  // Sync the button's a11y state with whatever the inline <head>
+  // script already applied before this ran.
+  apply(isDark());
+
+  btn.addEventListener("click", () => {
+    const dark = !isDark();
+    apply(dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  });
+
+  // If the person never explicitly chose on this site, keep following
+  // the OS-level preference live.
+  if (window.matchMedia) {
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", (e) => {
+        if (localStorage.getItem("theme")) return; // explicit choice wins
+        apply(e.matches);
+      });
+  }
 }
 
 function setupPaintCanvas(canvasArg) {
