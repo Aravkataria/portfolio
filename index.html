@@ -828,30 +828,30 @@ const PROJECTS = [
   {
     name: "Arch-Ai-Tex",
     description:
-      "Generates house floor plans from inputs like area and room count, with a sidebar chatbot. Rebuilding that chatbot as a small language model trained from scratch instead of an external API.",
-    tags: ["Python", "Streamlit", "SLM"],
+      "Generates house floor plans from area, room count, and plot shape using a GAN, with a Random Forest model estimating room layouts and an FCN-ResNet50 segmentation model marking walls. Also has a real-time mode where an ESP32 + ultrasonic/PIR sensors measure a room and feed dimensions straight into the generator. Rebuilding the sidebar chatbot as a small language model trained from scratch instead of an external API.",
+    tags: ["Python", "PyTorch", "Streamlit", "GAN"],
     url: "https://github.com/Aravkataria/Arch-Ai-Tex",
   },
   {
     name: "LumiDesk",
     description:
-      "ESP32 + OLED desk display for whatever's currently playing. Reads Windows' media session API directly — works with Spotify, YouTube, or any app, no OAuth or rate limits.",
+      "ESP32 + OLED desk display for whatever's currently playing. Reads Windows' media session API directly — works with Spotify, YouTube, or any app, no OAuth or rate limits. Backend fetches synced lyrics from LRCLIB and serves them alongside track/progress data over local HTTP; firmware is split into manager classes for the display, animations, and marquee scrolling.",
     tags: ["ESP32", "C++", "FastAPI", "Python"],
     url: "https://github.com/Aravkataria/LumiDesk",
   },
   {
     name: "Pyramid Compress",
     description:
-      "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction. Ships as a Python CLI and a drag-and-drop web app.",
+      "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction and PSNR reporting to measure quality loss. Ships as a Python CLI and a drag-and-drop web app — both run entirely client-side/local, no images ever leave the device.",
     tags: ["Python", "NumPy", "Pillow", "JavaScript"],
     url: "https://github.com/Aravkataria/pyramid-compression",
   },
   {
-    name: "Ultrasonic Radar",
+    name: "GAN Loss Landscape",
     description:
-      "DIY 2D spatial mapper — an ultrasonic sensor sweeps 180 degrees on a servo, converting polar readings into a live X/Y point-cloud.",
-    tags: ["Arduino", "ESP32", "Embedded"],
-    url: "https://github.com/Aravkataria",
+      "Visualizes the loss landscape of a trained GAN by perturbing its parameters along two random directions and plotting the resulting surface — 2D contour maps, 3D meshes, and 1D slices — at adjustable grid resolutions, to see how flat or sharp the learned minima actually are.",
+    tags: ["Python", "PyTorch", "Matplotlib"],
+    url: "https://github.com/Aravkataria/GAN-loss-landscape-visualization",
   },
 ];
 
