@@ -4,14 +4,27 @@
 :root {
   --bg: #fdfdfb;
   --ink: #14141a;
+  --ink-invert: #fff; /* text/icon color sitting on an ink-filled surface (primary btn, hovers) */
   --muted: #6b6b76;
+  --placeholder: #a8a8b3;
   --line: rgba(20, 20, 26, 0.09);
   --card: rgba(255, 255, 255, 0.6);
   --card-border: rgba(20, 20, 26, 0.08);
+  --shadow-rgb: 20, 20, 26; /* used inside rgba() for drop shadows */
+
+  /* translucent white surfaces used for pills/inputs/dock at various strengths */
+  --surface: rgba(255, 255, 255, 0.5);
+  --surface-strong: rgba(255, 255, 255, 0.55);
+  --surface-input: rgba(255, 255, 255, 0.6);
+  --surface-dock: rgba(255, 255, 255, 0.72);
+  --surface-solid: #fff; /* fully opaque hover state (topbar cta, contact card, focused input) */
 
   --violet: #7c3aed;
   --pink: #ec4899;
   --green: #10b981;
+  --send-text: #06301f;
+  --error-border: #e0796f;
+  --error-text: #c2564a;
 
   --blob-violet: #b9a4f7;
   --blob-pink: #f8b4d9;
@@ -29,6 +42,55 @@
   --max-w: 780px;
 }
 
+/* =========================================================
+   DARK MODE
+   Same layout, same behavior — only the palette changes.
+   Toggled by JS setting data-theme="dark" on <html> (see
+   setupThemeToggle in script.js); persisted in localStorage.
+========================================================= */
+html[data-theme="dark"] {
+  --bg: #0b0b10;
+  --ink: #f1f1f5;
+  --ink-invert: #0b0b10;
+  --muted: #9b9ba8;
+  --placeholder: #6b6b78;
+  --line: rgba(255, 255, 255, 0.09);
+  --card: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --shadow-rgb: 0, 0, 0;
+
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-strong: rgba(255, 255, 255, 0.07);
+  --surface-input: rgba(255, 255, 255, 0.06);
+  --surface-dock: rgba(20, 20, 26, 0.72);
+  --surface-solid: #1a1a22;
+
+  --violet: #a78bfa;
+  --pink: #f472b6;
+  --green: #34d399;
+  --send-text: #06301f;
+  --error-border: #e0796f;
+  --error-text: #ff8a7a;
+}
+
+/* Smooth crossfade when the theme flips, without touching any
+   layout-affecting property. */
+body,
+.topbar-cta,
+.btn,
+.social-icon,
+.project-card,
+.skill-pill,
+.contact-card,
+.field input,
+.field textarea,
+.dock,
+.dock-item,
+.theme-toggle {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
@@ -42,7 +104,7 @@ body {
   overflow-x: hidden;
 }
 
-::selection { background: var(--violet); color: #fff; }
+::selection { background: var(--violet); color: var(--ink-invert); }
 
 a { color: inherit; text-decoration: none; }
 
@@ -75,6 +137,21 @@ a { color: inherit; text-decoration: none; }
   opacity: 1;
 }
 
+/* The fluid sim's shader math composites its dye as "ink absorbed from
+   white paper" (see script.js), so it always renders a white base with
+   colored blooms. Inverting it in dark mode turns that white base into
+   near-black and keeps the color blooms vivid — same simulation, same
+   physics, just recolored for a dark page. The 2D fallback instead
+   switches its blend mode, since its drops are painted with alpha
+   directly rather than baked against a white base. */
+html[data-theme="dark"] .paint-canvas--gl {
+  filter: invert(1) hue-rotate(180deg);
+}
+html[data-theme="dark"] .paint-canvas:not(.paint-canvas--gl) {
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+
 /* =========================================================
    TOPBAR
 ========================================================= */
@@ -87,6 +164,11 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
   padding: 22px clamp(20px, 5vw, 64px);
   backdrop-filter: blur(6px);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
 }
 
 .brand {
@@ -106,14 +188,41 @@ a { color: inherit; text-decoration: none; }
   padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid var(--card-border);
-  background: rgba(255,255,255,0.55);
+  background: var(--surface-strong);
   transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
 }
 .topbar-cta:hover {
   transform: translateY(-1px);
-  background: #fff;
+  background: var(--surface-solid);
   border-color: var(--violet);
 }
+
+/* =========================================================
+   THEME TOGGLE
+========================================================= */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-left: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--surface-strong);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: var(--violet);
+  color: var(--violet);
+}
+.theme-toggle svg { display: block; }
+.theme-toggle .icon-sun { display: none; }
+html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 
 /* =========================================================
    LAYOUT / SECTIONS
@@ -203,15 +312,15 @@ main {
 }
 .btn--primary {
   background: var(--ink);
-  color: #fff;
+  color: var(--ink-invert);
 }
 .btn--primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(20,20,26,0.22);
+  box-shadow: 0 10px 24px rgba(var(--shadow-rgb), 0.22);
 }
 .btn--ghost {
   border-color: var(--card-border);
-  background: rgba(255,255,255,0.5);
+  background: var(--surface);
   color: var(--ink);
 }
 .btn--ghost:hover {
@@ -232,14 +341,14 @@ main {
   height: 40px;
   border-radius: 50%;
   border: 1px solid var(--card-border);
-  background: rgba(255,255,255,0.5);
+  background: var(--surface);
   color: var(--ink);
   transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 .social-icon:hover {
   transform: translateY(-2px);
   background: var(--ink);
-  color: #fff;
+  color: var(--ink-invert);
 }
 
 /* =========================================================
@@ -304,7 +413,7 @@ main {
 }
 .project-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 40px rgba(20,20,26,0.1);
+  box-shadow: 0 18px 40px rgba(var(--shadow-rgb), 0.1);
   border-color: var(--violet);
 }
 
@@ -375,13 +484,13 @@ main {
   padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid var(--card-border);
-  background: rgba(255,255,255,0.55);
+  background: var(--surface-strong);
   transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 .skill-pill:hover {
   transform: translateY(-2px) rotate(-1deg);
   background: var(--ink);
-  color: #fff;
+  color: var(--ink-invert);
   border-color: var(--ink);
 }
 
@@ -412,7 +521,7 @@ main {
 .contact-card:hover {
   transform: translateX(4px);
   border-color: var(--violet);
-  background: #fff;
+  background: var(--surface-solid);
 }
 .contact-card-label {
   font-family: var(--font-mono);
@@ -465,7 +574,7 @@ main {
   font-family: var(--font-body);
   font-size: 0.95rem;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--surface-input);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
@@ -474,17 +583,17 @@ main {
 }
 .field input::placeholder,
 .field textarea::placeholder {
-  color: #a8a8b3;
+  color: var(--placeholder);
 }
 .field input:focus,
 .field textarea:focus {
   outline: none;
   border-color: var(--violet);
-  background: #fff;
+  background: var(--surface-solid);
 }
 .field input:invalid:not(:placeholder-shown),
 .field textarea:invalid:not(:placeholder-shown) {
-  border-color: #e0796f;
+  border-color: var(--error-border);
 }
 
 .hp-field {
@@ -515,7 +624,7 @@ main {
   align-items: center;
   gap: 8px;
   background: var(--green);
-  color: #06301f;
+  color: var(--send-text);
 }
 .btn--send:hover {
   transform: translateY(-2px);
@@ -535,7 +644,7 @@ main {
   min-height: 1.2em;
 }
 .form-status[data-state="success"] { color: var(--green); }
-.form-status[data-state="error"] { color: #c2564a; }
+.form-status[data-state="error"] { color: var(--error-text); }
 
 /* =========================================================
    FOOTER
@@ -561,10 +670,10 @@ main {
   gap: 4px;
   padding: 8px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.72);
+  background: var(--surface-dock);
   border: 1px solid var(--card-border);
   backdrop-filter: blur(14px);
-  box-shadow: 0 12px 32px rgba(20,20,26,0.12);
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.12);
 }
 
 .dock-item {
@@ -592,7 +701,7 @@ main {
 .dock-item:hover,
 .dock-item.is-active {
   background: var(--ink);
-  color: #fff;
+  color: var(--ink-invert);
 }
 
 /* =========================================================
