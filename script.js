@@ -965,8 +965,12 @@ function setupThemeToggle() {
 
   btn.addEventListener("click", () => {
     const dark = !isDark();
-    apply(dark);
-    localStorage.setItem("theme", dark ? "dark" : "light");
+    apply(dark); // always runs, so the toggle visibly works even if storage is blocked
+    try {
+      localStorage.setItem("theme", dark ? "dark" : "light");
+    } catch (err) {
+      console.error("[portfolio] couldn't save theme preference:", err);
+    }
   });
 
   // If the person never explicitly chose on this site, keep following
@@ -975,7 +979,13 @@ function setupThemeToggle() {
     window
       .matchMedia("(prefers-color-scheme: dark)")
       .addEventListener("change", (e) => {
-        if (localStorage.getItem("theme")) return; // explicit choice wins
+        let explicit = null;
+        try {
+          explicit = localStorage.getItem("theme");
+        } catch (err) {
+          /* storage blocked — just follow the OS preference */
+        }
+        if (explicit) return; // explicit choice wins
         apply(e.matches);
       });
   }
