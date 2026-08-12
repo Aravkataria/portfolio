@@ -23,8 +23,8 @@ const PROJECTS = [
     tags: ["Python", "PyTorch", "Streamlit", "GAN"],
     url: "https://github.com/Aravkataria/Arch-Ai-Tex",
     demo: "https://aravkataria.github.io/Arch-Ai-Tex/",
-    status: "in-development",
-    statusLabel: "In Development",
+    status: "open-source",
+    statusLabel: "open source",
     what:
       "Arch-Ai-Tex generates house floor plans from area, room count, and plot shape. A GAN produces the floor plan, a Random Forest model estimates room layouts, and an FCN-ResNet50 segmentation model marks the walls. A real-time mode lets an ESP32 with ultrasonic and PIR sensors measure a physical room and feed those dimensions straight into the generator.",
     why:
@@ -83,6 +83,7 @@ const PROJECTS = [
       "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction and PSNR reporting to measure quality loss. Ships as a Python CLI and a drag-and-drop web app — both run entirely client-side/local, no images ever leave the device.",
     tags: ["Python", "NumPy", "Pillow", "JavaScript"],
     url: "https://github.com/Aravkataria/pyramid-compression",
+    demo: "https://aravkataria.github.io/pyramid-compression/"
     status: "open-source",
     statusLabel: "Open Source",
     what:
@@ -136,8 +137,8 @@ const PROJECTS = [
 
 const SKILLS = [
   "Python", "JavaScript", "C++", "HTML / CSS",
-  "FastAPI", "NumPy", "Pillow", "Streamlit",
-  "Arduino / ESP32", "Embedded Systems", "Git & GitHub",
+  "FastAPI", "Streamlit", "PyTorch", "sklearn", "NumPy", "Pillow", "Streamlit",
+  "Arduino / ESP32", "Embedded Systems", "Git & GitHub", "IOT", 
 ];
 
 /* =====================================================================
