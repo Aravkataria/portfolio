@@ -180,6 +180,56 @@
 
   </main>
 
+  <!-- ============ PROJECT DETAIL OVERLAY ============
+       A single reusable overlay — content for whichever project was
+       clicked is injected by script.js (renderProjectDetail) from the
+       PROJECTS config, so nothing project-specific is duplicated here. -->
+  <div class="pd-overlay" id="pdOverlay" aria-hidden="true">
+    <div class="pd-backdrop" data-pd-close></div>
+    <div class="pd-panel" role="dialog" aria-modal="true" aria-labelledby="pdTitle" id="pdPanel">
+      <button type="button" class="pd-close" id="pdClose" aria-label="Close project details">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="pd-scroll" id="pdScroll">
+        <header class="pd-header">
+          <h2 class="pd-title" id="pdTitle"></h2>
+          <p class="pd-desc" id="pdDesc"></p>
+          <div class="pd-meta">
+            <div class="pd-tech" id="pdTech"></div>
+            <span class="project-status" id="pdStatus"><span class="project-status-dot"></span><span id="pdStatusLabel"></span></span>
+          </div>
+        </header>
+
+        <section class="pd-section" data-pd-section>
+          <p class="pd-eyebrow">What</p>
+          <div class="pd-body" id="pdWhat"></div>
+        </section>
+
+        <section class="pd-section" data-pd-section>
+          <p class="pd-eyebrow">Why</p>
+          <div class="pd-body" id="pdWhy"></div>
+        </section>
+
+        <section class="pd-section" data-pd-section>
+          <p class="pd-eyebrow">How</p>
+          <div class="pd-flow" id="pdHow"></div>
+        </section>
+
+        <section class="pd-section" data-pd-section>
+          <p class="pd-eyebrow">My Contribution</p>
+          <ul class="pd-list" id="pdContribution"></ul>
+        </section>
+
+        <section class="pd-section" data-pd-section>
+          <p class="pd-eyebrow">Results</p>
+          <div class="pd-body" id="pdResults"></div>
+        </section>
+
+        <div class="pd-actions" id="pdActions"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ FLOATING DOCK NAV ============ -->
   <nav class="dock" id="dock" aria-label="Section navigation">
     <a href="#me" class="dock-item" data-section="me">
