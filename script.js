@@ -16,32 +16,121 @@ const PROFILE = {
 
 const PROJECTS = [
   {
+    id: "arch-ai-tex",
     name: "Arch-Ai-Tex",
     description:
       "Generates house floor plans from area, room count, and plot shape using a GAN, with a Random Forest model estimating room layouts and an FCN-ResNet50 segmentation model marking walls. Also has a real-time mode where an ESP32 + ultrasonic/PIR sensors measure a room and feed dimensions straight into the generator. Rebuilding the sidebar chatbot as a small language model trained from scratch instead of an external API.",
     tags: ["Python", "PyTorch", "Streamlit", "GAN"],
     url: "https://github.com/Aravkataria/Arch-Ai-Tex",
+    demo: "https://aravkataria.github.io/Arch-Ai-Tex/",
+    status: "in-development",
+    statusLabel: "In Development",
+    what:
+      "Arch-Ai-Tex generates house floor plans from area, room count, and plot shape. A GAN produces the floor plan, a Random Forest model estimates room layouts, and an FCN-ResNet50 segmentation model marks the walls. A real-time mode lets an ESP32 with ultrasonic and PIR sensors measure a physical room and feed those dimensions straight into the generator.",
+    why:
+      "Built to work through generative floor-plan design end-to-end — generation, layout estimation, and segmentation as separate, purpose-built models rather than one catch-all network — and to give the tool a path from a real, physically measured room straight into the generator.",
+    how: [
+      "Area / room count / plot shape",
+      "Random Forest — room layout estimation",
+      "GAN — floor plan generation",
+      "FCN-ResNet50 — wall segmentation",
+      "Streamlit interface",
+    ],
+    contribution: [
+      "Trained and tuned the GAN for floor-plan generation",
+      "Built the Random Forest room-layout estimator",
+      "Set up the FCN-ResNet50 wall-segmentation model",
+      "Built the ESP32 real-time measurement mode (ultrasonic + PIR sensors)",
+      "Training a small language model from scratch to replace the sidebar chatbot's Groq API dependency",
+    ],
+    results:
+      "Generates a full floor plan from just area, room count, and plot shape, with the segmentation model marking walls on the generated output. The from-scratch SLM chatbot rebuild — replacing the external Groq API — is in progress.",
   },
   {
+    id: "lumidesk",
     name: "LumiDesk",
     description:
       "ESP32 + OLED desk display for whatever's currently playing. Reads Windows' media session API directly — works with Spotify, YouTube, or any app, no OAuth or rate limits. Backend fetches synced lyrics from LRCLIB and serves them alongside track/progress data over local HTTP; firmware is split into manager classes for the display, animations, and marquee scrolling.",
     tags: ["ESP32", "C++", "FastAPI", "Python"],
     url: "https://github.com/Aravkataria/LumiDesk",
+    status: "open-source",
+    statusLabel: "Open Source",
+    what:
+      "LumiDesk is a desktop-to-ESP32 media display. It reads Windows' built-in media-session API directly, so it works with Spotify, YouTube, browser tabs, or anything else reporting playback to Windows — no OAuth, client IDs, or rate limits. A second screen shows time and weather when nothing's playing.",
+    why:
+      "Built to have a dedicated physical display for whatever's playing without depending on any one streaming service's API — reading the OS-level session data instead means it works with anything Windows already knows about.",
+    how: [
+      "Windows Media Session API",
+      "Python backend (FastAPI)",
+      "Lyrics fetched from LRCLIB",
+      "Wi-Fi",
+      "ESP32 firmware",
+      "1.3\" SH1106 OLED (128×64, I2C)",
+    ],
+    contribution: [
+      "Built the FastAPI backend (app.py, media_service.py, lyrics_service.py, models.py)",
+      "Implemented synced lyrics fetching via LRCLIB",
+      "Wrote the ESP32 firmware, split into DisplayManager, ScreenManager, AnimationManager, MarqueeManager and NotificationManager classes",
+      "Designed the idle screen (time + weather) shown when nothing is playing",
+    ],
+    results:
+      "Works with Spotify, YouTube, or any app reporting to Windows' media session — no per-service API keys or OAuth needed. Runs on a single 1.3\" SH1106 OLED over I2C.",
   },
   {
+    id: "pyramid-compress",
     name: "Pyramid Compress",
     description:
       "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction and PSNR reporting to measure quality loss. Ships as a Python CLI and a drag-and-drop web app — both run entirely client-side/local, no images ever leave the device.",
     tags: ["Python", "NumPy", "Pillow", "JavaScript"],
     url: "https://github.com/Aravkataria/pyramid-compression",
+    status: "open-source",
+    statusLabel: "Open Source",
+    what:
+      "A recursive image compression tool built on 2×2 block averaging. Ships as both a Python CLI and a drag-and-drop web app that runs entirely client-side, so images never leave the device.",
+    why:
+      "Built to implement image compression by hand — block averaging down, then nearest-neighbor or bilinear reconstruction back up — instead of relying on an existing codec, with PSNR reporting to see exactly what each compression level costs in quality.",
+    how: [
+      "Image",
+      "Recursive 2×2 block averaging (compress)",
+      "Compressed pyramid + .meta.txt sidecar",
+      "Nearest-neighbor or bilinear reconstruction (decompress)",
+      "PSNR quality report",
+    ],
+    contribution: [
+      "Implemented the recursive 2×2 block-averaging compressor and both reconstruction modes",
+      "Built the PSNR quality-loss reporting",
+      "Built the Python CLI (pyramid_compress.py, using Pillow + NumPy)",
+      "Built the drag-and-drop web app and landing page, running entirely client-side",
+    ],
+    results:
+      "CLI and web app both run fully offline / client-side — no images ever leave the device. PSNR reporting shows the exact quality cost at each compression level.",
   },
   {
+    id: "gan-loss-landscape",
     name: "GAN Loss Landscape",
     description:
       "Visualizes the loss landscape of a trained GAN by perturbing its parameters along two random directions and plotting the resulting surface — 2D contour maps, 3D meshes, and 1D slices — at adjustable grid resolutions, to see how flat or sharp the learned minima actually are.",
     tags: ["Python", "PyTorch", "Matplotlib"],
     url: "https://github.com/Aravkataria/GAN-loss-landscape-visualization",
+    status: "research",
+    statusLabel: "Research",
+    what:
+      "Visualizes the loss landscape of a trained GAN by perturbing its parameters along two random directions and plotting the resulting surface at adjustable grid resolutions.",
+    why:
+      "Built to see how flat or sharp a GAN's learned minima actually are — visualizing the loss surface directly, instead of only watching the loss number move during training.",
+    how: [
+      "Trained GAN checkpoint",
+      "Two random parameter perturbation directions",
+      "Loss evaluated across a parameter grid",
+      "2D contour map / 3D mesh / 1D slice",
+    ],
+    contribution: [
+      "Implemented the parameter-perturbation sampling along two random directions",
+      "Built the loss-surface evaluation across adjustable grid resolutions",
+      "Built the 2D contour, 3D mesh, and 1D slice visualizations in Matplotlib",
+    ],
+    results:
+      "Produces 2D contour maps, 3D meshes, and 1D slices of the loss surface at adjustable grid resolutions.",
   },
 ];
 
@@ -67,6 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   safeRun("setupDockScrollSpy", setupDockScrollSpy);
   safeRun("setupMessageForm", setupMessageForm);
   safeRun("setupThemeToggle", setupThemeToggle);
+  safeRun("setupProjectDetail", setupProjectDetail);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!reduceMotion) {
@@ -136,14 +226,27 @@ function renderProjects() {
 
   grid.innerHTML = PROJECTS.map(
     (p) => `
-    <article class="project-card">
+    <article class="project-card" data-project-id="${p.id}" tabindex="0" role="button" aria-haspopup="dialog" aria-label="View details for ${escapeHtml(p.name)}">
       <div class="project-card-top">
         <h3>${escapeHtml(p.name)}</h3>
-        <a class="project-card-link" href="${p.url}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(p.name)} on GitHub">
+        <a class="project-card-link" href="${p.url}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(p.name)} on GitHub" data-pd-stop>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
       </div>
       <p>${escapeHtml(p.description)}</p>
+      <div class="project-card-meta">
+        <span class="project-status" data-status="${p.status}">
+          <span class="project-status-dot"></span>${escapeHtml(p.statusLabel)}
+        </span>
+        ${
+          p.demo
+            ? `<a class="project-demo-btn" href="${p.demo}" target="_blank" rel="noopener" aria-label="Open live demo of ${escapeHtml(p.name)}" data-pd-stop>
+                Try Demo
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>`
+            : ""
+        }
+      </div>
       <div class="project-tags">
         ${p.tags.map((t) => `<span>${escapeHtml(t)}</span>`).join("")}
       </div>
@@ -167,6 +270,294 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+   Project detail overlay
+   Clicking a project card's body (not the GitHub icon or Try Demo
+   button — those keep navigating directly) opens a full case-study
+   view built from the PROJECTS data above. One overlay in the DOM,
+   reused for every project; content is injected on open.
+--------------------------------------------------------------------- */
+function setupProjectDetail() {
+  const grid = document.getElementById("projectGrid");
+  const overlay = document.getElementById("pdOverlay");
+  const panel = document.getElementById("pdPanel");
+  const scrollEl = document.getElementById("pdScroll");
+  const closeBtn = document.getElementById("pdClose");
+  if (!grid || !overlay || !panel || !scrollEl || !closeBtn) return;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let activeProject = null;
+  let triggerEl = null;
+  let stopScrollMotion = null;
+
+  function openProject(project, fromEl) {
+    if (!project) return;
+    activeProject = project;
+    triggerEl = fromEl || null;
+
+    renderProjectDetail(project);
+
+    // Anchor the panel's scale/opacity transform to roughly where the
+    // clicked card sits, so the window reads as expanding from the
+    // card rather than appearing from nowhere.
+    if (fromEl && !reduceMotion) {
+      const r = fromEl.getBoundingClientRect();
+      const originX = ((r.left + r.width / 2) / window.innerWidth) * 100;
+      const originY = ((r.top + r.height / 2) / window.innerHeight) * 100;
+      panel.style.setProperty("--pd-origin-x", `${originX}%`);
+      panel.style.setProperty("--pd-origin-y", `${originY}%`);
+    } else {
+      panel.style.removeProperty("--pd-origin-x");
+      panel.style.removeProperty("--pd-origin-y");
+    }
+
+    overlay.removeAttribute("aria-hidden");
+    overlay.classList.add("is-open");
+    document.documentElement.classList.add("pd-scroll-lock");
+    scrollEl.scrollTop = 0;
+
+    // Focus moves into the window; Escape/outside-click/close button
+    // all route back through closeProject.
+    closeBtn.focus();
+    document.addEventListener("keydown", handleKeydown, true);
+
+    //if (!reduceMotion) {
+     // stopScrollMotion = setupProjectDetailScrollMotion(scrollEl);
+    //}
+  }
+
+  function closeProject() {
+    if (!overlay.classList.contains("is-open")) return;
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.documentElement.classList.remove("pd-scroll-lock");
+    document.removeEventListener("keydown", handleKeydown, true);
+
+    if (stopScrollMotion) {
+      stopScrollMotion();
+      stopScrollMotion = null;
+    }
+
+    if (triggerEl && document.contains(triggerEl)) {
+      triggerEl.focus();
+    }
+    activeProject = null;
+    triggerEl = null;
+  }
+
+  function handleKeydown(e) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeProject();
+      return;
+    }
+    if (e.key === "Tab") {
+      trapFocus(e, panel);
+    }
+  }
+
+  // Card interactions: click anywhere on the card body opens the
+  // detail window, except on elements marked data-pd-stop (the GitHub
+  // icon and Try Demo button), which keep navigating directly.
+  grid.addEventListener("click", (e) => {
+    if (e.target.closest("[data-pd-stop]")) return;
+    const card = e.target.closest(".project-card");
+    if (!card) return;
+    const project = PROJECTS.find((p) => p.id === card.dataset.projectId);
+    openProject(project, card);
+  });
+
+  grid.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (e.target.closest("[data-pd-stop]")) return;
+    const card = e.target.closest(".project-card");
+    if (!card || e.target !== card) return; // let nested links handle their own Enter
+    e.preventDefault();
+    const project = PROJECTS.find((p) => p.id === card.dataset.projectId);
+    openProject(project, card);
+  });
+
+  closeBtn.addEventListener("click", closeProject);
+  overlay.querySelectorAll("[data-pd-close]").forEach((el) => {
+    el.addEventListener("click", closeProject);
+  });
+}
+
+function trapFocus(e, panel) {
+  const focusable = panel.querySelectorAll(
+    'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+  );
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
+function renderProjectDetail(p) {
+  document.getElementById("pdTitle").textContent = p.name;
+  document.getElementById("pdDesc").textContent = p.description;
+  document.getElementById("pdStatus").setAttribute("data-status", p.status);
+  document.getElementById("pdStatusLabel").textContent = p.statusLabel;
+
+  document.getElementById("pdTech").innerHTML = p.tags
+    .map((t) => `<span>${escapeHtml(t)}</span>`)
+    .join("");
+
+  document.getElementById("pdWhat").innerHTML = `<p>${escapeHtml(p.what)}</p>`;
+  document.getElementById("pdWhy").innerHTML = `<p>${escapeHtml(p.why)}</p>`;
+  document.getElementById("pdResults").innerHTML = `<p>${escapeHtml(p.results)}</p>`;
+
+  document.getElementById("pdHow").innerHTML = p.how
+    .map(
+      (step, i) =>
+        `<div class="pd-flow-step">${escapeHtml(step)}</div>` +
+        (i < p.how.length - 1 ? `<div class="pd-flow-arrow" aria-hidden="true">↓</div>` : "")
+    )
+    .join("");
+
+  document.getElementById("pdContribution").innerHTML = p.contribution
+    .map((c) => `<li>${escapeHtml(c)}</li>`)
+    .join("");
+
+  const actions = [];
+  if (p.demo) {
+    actions.push(
+      `<a class="btn btn--primary" href="${p.demo}" target="_blank" rel="noopener">Try Demo
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>`
+    );
+  }
+  actions.push(
+    `<a class="btn btn--ghost" href="${p.url}" target="_blank" rel="noopener">View GitHub
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>`
+  );
+  if (p.docs) {
+    actions.push(
+      `<a class="btn btn--ghost" href="${p.docs}" target="_blank" rel="noopener">View Documentation
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>`
+    );
+  }
+  document.getElementById("pdActions").innerHTML = actions.join("");
+}
+
+// As the visitor scrolls through the project window, sections fade
+// and shift slightly based on distance from a focus band near the
+// top of the viewport — passed sections drift up and fade, upcoming
+// ones sit low and dim, so the currently-read section stays the
+// clear visual focus.
+//
+// Performance: section positions relative to the scroll container
+// don't change while scrolling — only scrollTop does — so layout is
+// measured once (on open + on resize) and cached. Each scroll frame
+// then does pure arithmetic against that cache and writes styles,
+// with no DOM reads in between. Reading layout (getBoundingClientRect)
+// and writing styles in the same per-element loop, every frame, was
+// the earlier version of this function and forced a synchronous
+// layout recalculation on every element on every frame — the actual
+// cause of the scroll feeling laggy, especially on slower devices.
+function setupProjectDetailScrollMotion(scrollEl) {
+  const sections = Array.from(scrollEl.querySelectorAll("[data-pd-section]"));
+  if (!sections.length) return null;
+
+  let layout = [];
+  let viewportHeight = 0;
+  let ticking = false;
+
+  function measure() {
+    const scrollTop = scrollEl.scrollTop;
+    const containerTop = scrollEl.getBoundingClientRect().top;
+    viewportHeight = scrollEl.clientHeight;
+    
+    layout = sections.map((sec) => {
+      const r = sec.getBoundingClientRect();
+      const top = r.top - containerTop + scrollTop;
+      return { el: sec, top: top, height: r.height };
+    });
+  }
+
+  function update() {
+    ticking = false;
+    
+    // Batch these reads at the top so we don't cause layout thrashing
+    const scrollTop = scrollEl.scrollTop;
+    const scrollHeight = scrollEl.scrollHeight;
+    const maxScrollTop = Math.max(0, scrollHeight - viewportHeight);
+
+    layout.forEach(({ el, top, height }) => {
+      const centerAbsolute = top + height / 2;
+      
+      // Where does this section sit when scrolled to the absolute top vs absolute bottom?
+      // (Represented as a percentage of the viewport height, 0.0 to 1.0+)
+      const maxT = centerAbsolute / viewportHeight; 
+      const minT = (centerAbsolute - maxScrollTop) / viewportHeight;
+
+      // The standard safe zone is the middle third (0.33 to 0.67).
+      // If a section is trapped at the top or bottom and can't reach the middle, 
+      // we dynamically expand its safe zone so it doesn't fade while parked at the edge.
+      const safeTop = Math.min(0.33, maxT);
+      const safeBottom = Math.max(0.67, minT);
+
+      // Where is it right now?
+      const currentT = (centerAbsolute - scrollTop) / viewportHeight;
+
+      let opacity = 1;
+      let translate = 0;
+
+      if (currentT < safeTop) {
+        // Moving UP out of its safe zone
+        const distance = safeTop - currentT;
+        const fadeRatio = Math.min(1, distance / 0.33); // Fades out over 33% of the screen
+        opacity = 1 - (fadeRatio * 0.68); // Drops to 0.32 max
+        translate = -(fadeRatio * 22);
+      } else if (currentT > safeBottom) {
+        // Moving DOWN out of its safe zone
+        const distance = currentT - safeBottom;
+        const fadeRatio = Math.min(1, distance / 0.33);
+        opacity = 1 - (fadeRatio * 0.68);
+        translate = (fadeRatio * 22);
+      }
+
+      el.style.opacity = opacity.toFixed(3);
+      el.style.transform = `translateY(${translate.toFixed(1)}px)`;
+    });
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  }
+
+  function onResize() {
+    measure();
+    update();
+  }
+
+  measure();
+  update();
+  scrollEl.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onResize, { passive: true });
+
+  return function stop() {
+    scrollEl.removeEventListener("scroll", onScroll);
+    window.removeEventListener("resize", onResize);
+    layout.forEach(({ el }) => {
+      el.style.opacity = "";
+      el.style.transform = "";
+    });
+  };
 }
 
 /* ---------------------------------------------------------------------
