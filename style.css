@@ -73,13 +73,21 @@ html[data-theme="dark"] {
   --error-text: #ff8a7a;
 }
 
-/* Smooth crossfade when the theme flips. A universal, low-specificity
-   rule catches every element (headings, body copy, labels, icons via
-   currentColor, etc.) without fighting the more specific hover
-   transitions already declared on buttons/cards/pills further down —
-   those keep their own faster timing since a class selector always
-   wins over `*`. prefers-reduced-motion below still forces this to
-   near-instant for anyone who wants that. */
+/* Smooth crossfade when the theme flips.
+   Many components (buttons, cards, pills, dock icons) declare their
+   own faster `transition:` list for hover effects, and that list
+   often includes the same background-color/color/border-color
+   properties as the crossfade below — so it silently replaced the
+   slow crossfade with the fast hover speed, making theme switches
+   look instant on anything with a hover state.
+   Fix: keep hover transitions exactly as they are, and only during
+   the ~0.8s window right after a theme toggle, add
+   `theme-transitioning` to <html> (see setupThemeToggle in
+   script.js). While that class is present, every element is forced
+   onto the slow crossfade regardless of its own transition list;
+   the class is removed right after, so hover speed elsewhere is
+   completely unaffected. prefers-reduced-motion below still forces
+   this to near-instant for anyone who wants that. */
 *, *::before, *::after {
   transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
@@ -87,6 +95,18 @@ html[data-theme="dark"] {
     box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1),
     fill 0.8s cubic-bezier(0.4, 0, 0.2, 1),
     stroke 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    fill 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 * { box-sizing: border-box; }
