@@ -137,9 +137,12 @@ a { color: inherit; text-decoration: none; }
 /* The WebGL fluid sim already computes its own final color against
    white in the shader, so it skips the blur/multiply stack the 2D
    fallback needs — that stack would just smear away the fine swirl
-   detail that's the reason to use it. */
+   detail that's the reason to use it. A light saturate/contrast boost
+   here just makes the ink blooms a bit easier to notice against the
+   near-white page — dark mode's own filter override below replaces
+   this value entirely, so it's unaffected. */
 .paint-canvas--gl {
-  filter: none;
+  filter: saturate(1.4) contrast(1.08);
   mix-blend-mode: normal;
   opacity: 1;
   transition: filter 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -807,28 +810,52 @@ html[data-theme="dark"] .pd-backdrop {
   background: rgba(0, 0, 0, 0.55);
 }
 
-/* Semi-transparent glass panel — reuses the same translucent surface
-   + blur already used for the floating dock nav (--surface-dock),
-   just with a stronger blur since it sits over larger content. */
+/* Panel surface — same glass-card recipe used everywhere else on
+   the site (project cards, skill pills): var(--card) + blur(10px).
+   Matching it exactly (not a stronger/different blur) is what makes
+   the window read as the same material as the rest of the page. */
 .pd-panel {
   position: relative;
   width: min(94vw, 760px);
   max-height: min(86vh, 880px);
-  border-radius: 26px;
+  border-radius: var(--radius);
   border: 1px solid var(--card-border);
-  background: rgba(255, 255, 255, 0.90);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--card);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   box-shadow: 0 40px 90px rgba(var(--shadow-rgb), 0.28);
   overflow: hidden;
-  transform: scale(0.4);
   opacity: 0;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-  transform-origin: var(--pd-origin-x, 50%) var(--pd-origin-y, 50%);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease;
 }
 .pd-overlay.is-open .pd-panel {
-  transform: scale(1);
   opacity: 1;
+}
+/* Light mode's --card tint (0.6 opacity white) was the main thing
+   washing out the fluid behind the panel — dial it back further here,
+   specifically for light mode. Dark mode keeps the blur it already
+   had (its --card tint is only 0.05 opacity, so it wasn't the issue). */
+html:not([data-theme="dark"]) .pd-panel {
+  background: rgba(255, 255, 255, 0.4);
+}
+html[data-theme="dark"] .pd-panel {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Applied only while the open/close FLIP morph is actively animating
+   the panel's transform (see script.js). backdrop-filter and a large
+   box-shadow both have to be recomputed every frame on an element
+   whose size is changing via scale() — that's the main cost behind a
+   scale animation feeling laggy, especially layered over the WebGL
+   fluid background. Dropping them just for the ~0.4s of motion and
+   restoring them at rest keeps the same resting look at a fraction
+   of the per-frame cost. */
+.pd-panel--morphing {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  will-change: transform, opacity;
 }
 
 .pd-close {
@@ -1052,7 +1079,4 @@ button:focus-visible {
 
   .pd-panel { transform: none !important; }
   .pd-section { opacity: 1 !important; transform: none !important; }
-}
-html[data-theme="dark"] .pd-panel {
-  background: rgba(20, 20, 26, 0.90);
 }
