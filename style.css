@@ -494,9 +494,8 @@ main {
    header so the badge language stays consistent in both places. */
 .project-card-meta {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
 }
 
