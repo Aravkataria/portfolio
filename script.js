@@ -1,137 +1,190 @@
-/* =====================================================================
-   EDIT YOUR INFO HERE — this is the only place you should need to touch
-   ===================================================================== */
-
-const PROFILE = {
+  const PROFILE = {
   email: "aravkataria2009@gmail.com",          // <-- put your real email here
   linkedin: "https://www.linkedin.com/in/arav-kataria-59512b423/", // <-- put your LinkedIn URL here
   github: "https://github.com/Aravkataria",
 };
-// NOTE on the message form below: it delivers to PROFILE.email via
-// FormSubmit (formsubmit.co) — free, no signup, no backend needed.
-// The FIRST message ever sent will trigger a one-time confirmation
-// email from FormSubmit to that address — you must click the link in
-// it once before messages start arriving in your inbox. Every message
-// after that just shows up normally.
 
 const PROJECTS = [
   {
     id: "arch-ai-tex",
     name: "Arch-Ai-Tex",
     description:
-      "Generates house floor plans from area, room count, and plot shape using a GAN, with a Random Forest model estimating room layouts and an FCN-ResNet50 segmentation model marking walls. Also has a real-time mode where an ESP32 + ultrasonic/PIR sensors measure a room and feed dimensions straight into the generator. Rebuilding the sidebar chatbot as a small language model trained from scratch instead of an external API.",
-    tags: ["Python", "PyTorch", "Streamlit", "GAN"],
+      "AI-powered floor-plan generation system combining GAN-based image generation, Random Forest layout optimization, semantic segmentation, and real-time physical-room measurement through Arduino + ESP32 sensors.",
+    tags: ["Python", "PyTorch", "GAN", "Random Forest", "ESP32"],
     url: "https://github.com/Aravkataria/Arch-Ai-Tex",
     demo: "https://aravkataria.github.io/Arch-Ai-Tex/",
     status: "open-source",
-    statusLabel: "open source",
+    statusLabel: "Open Source",
+    siteVisitors: "300+",
+
     what:
-      "Arch-Ai-Tex generates house floor plans from area, room count, and plot shape. A GAN produces the floor plan, a Random Forest model estimates room layouts, and an FCN-ResNet50 segmentation model marks the walls. A real-time mode lets an ESP32 with ultrasonic and PIR sensors measure a physical room and feed those dimensions straight into the generator.",
+      "Arch-Ai-Tex explores an end-to-end pipeline for automatically generating and analyzing architectural floor plans. The system combines a GAN for floor-plan generation, a Random Forest-based layout optimizer with heuristic constraints, and a segmentation pipeline for identifying walls and structural regions. It also includes a real-time measurement system that uses Arduino Mega and ESP32-connected sensors to capture physical room dimensions.",
+
     why:
-      "Built to work through generative floor-plan design end-to-end — generation, layout estimation, and segmentation as separate, purpose-built models rather than one catch-all network — and to give the tool a path from a real, physically measured room straight into the generator.",
+      "Built to investigate how generative AI can be combined with classical machine learning, computer vision, geometric constraints, and physical sensor data to solve a real-world spatial design problem.",
+
     how: [
-      "Area / room count / plot shape",
-      "Random Forest — room layout estimation",
-      "GAN — floor plan generation",
-      "FCN-ResNet50 — wall segmentation",
-      "Streamlit interface",
+      "User-defined area, room count, and plot constraints",
+      "GAN — floor-plan image generation",
+      "Random Forest + heuristic optimization — room layout",
+      "Segmentation model — structural / wall regions",
+      "Arduino Mega + ESP32 — physical measurements",
+      "Ultrasonic, PIR, and IR sensors",
+      "Streamlit — interactive interface",
     ],
+
     contribution: [
-      "Trained and tuned the GAN for floor-plan generation",
-      "Built the Random Forest room-layout estimator",
-      "Set up the FCN-ResNet50 wall-segmentation model",
-      "Built the ESP32 real-time measurement mode (ultrasonic + PIR sensors)",
-      "Training a small language model from scratch to replace the sidebar chatbot's Groq API dependency",
+      "Designed and implemented the multi-model floor-plan generation pipeline",
+      "Trained and integrated the GAN-based floor-plan generator",
+      "Built the Random Forest-based room-layout optimization system",
+      "Added heuristic constraints for more structured layouts",
+      "Implemented the floor-plan segmentation workflow",
+      "Built the Arduino Mega + ESP32 sensor integration",
+      "Integrated ultrasonic, PIR, and IR measurements into the workflow",
+      "Built the Streamlit interface for interacting with the models",
     ],
+
     results:
-      "Generates a full floor plan from just area, room count, and plot shape, with the segmentation model marking walls on the generated output. The from-scratch SLM chatbot rebuild — replacing the external Groq API — is in progress.",
+      "The system generates 256×256 floor-plan outputs, provides an optimized layout-generation mode, and supports real-time physical-room measurement through connected sensors. The project demonstrates an end-to-end combination of generative AI, classical ML, computer vision, and embedded hardware.",
   },
+
   {
     id: "lumidesk",
     name: "LumiDesk",
     description:
-      "ESP32 + OLED desk display for whatever's currently playing. Reads Windows' media session API directly — works with Spotify, YouTube, or any app, no OAuth or rate limits. Backend fetches synced lyrics from LRCLIB and serves them alongside track/progress data over local HTTP; firmware is split into manager classes for the display, animations, and marquee scrolling.",
-    tags: ["ESP32", "C++", "FastAPI", "Python"],
+      "A physical desktop media display built with ESP32 and OLED that reads Windows' system-wide media sessions instead of relying on a streaming-service API. Supports music information, synced lyrics, progress, notifications, weather, time, volume control, and a standalone desktop launcher.",
+    tags: ["ESP32", "C++", "Python", "FastAPI", "Windows API"],
     url: "https://github.com/Aravkataria/LumiDesk",
     status: "open-source",
     statusLabel: "Open Source",
+    siteVisitors: "100+",
+
     what:
-      "LumiDesk is a desktop-to-ESP32 media display. It reads Windows' built-in media-session API directly, so it works with Spotify, YouTube, browser tabs, or anything else reporting playback to Windows — no OAuth, client IDs, or rate limits. A second screen shows time and weather when nothing's playing.",
+      "LumiDesk turns an ESP32 and OLED into a dedicated physical display for whatever is playing on a Windows computer. It reads Windows' Global System Media Transport Controls, allowing it to work across Spotify, YouTube, browser tabs, and other applications that expose playback information to Windows. A local FastAPI backend handles media data, lyrics, weather, and communication with the ESP32.",
+
     why:
-      "Built to have a dedicated physical display for whatever's playing without depending on any one streaming service's API — reading the OS-level session data instead means it works with anything Windows already knows about.",
+      "Built to create a service-independent physical now-playing display without depending on Spotify OAuth, client IDs, rate limits, or any single streaming platform. The project also explores embedded UI design, local networking, Windows APIs, and modular firmware architecture.",
+
     how: [
-      "Windows Media Session API",
-      "Python backend (FastAPI)",
-      "Lyrics fetched from LRCLIB",
-      "Wi-Fi",
+      "Windows Global System Media Transport Controls",
+      "Python media-session service",
+      "FastAPI local backend",
+      "LRCLIB synced lyrics",
+      "Local Wi-Fi communication",
       "ESP32 firmware",
-      "1.3\" SH1106 OLED (128×64, I2C)",
+      "1.3″ SH1106 128×64 OLED",
+      "Desktop launcher / system tray application",
+      "API-key authentication",
     ],
+
     contribution: [
-      "Built the FastAPI backend (app.py, media_service.py, lyrics_service.py, models.py)",
-      "Implemented synced lyrics fetching via LRCLIB",
-      "Wrote the ESP32 firmware, split into DisplayManager, ScreenManager, AnimationManager, MarqueeManager and NotificationManager classes",
-      "Designed the idle screen (time + weather) shown when nothing is playing",
+      "Built the Windows media-session integration",
+      "Developed the FastAPI backend and media-service layer",
+      "Implemented synced lyric fetching, parsing, caching, and playback synchronization",
+      "Designed the modular ESP32 firmware architecture",
+      "Implemented DisplayManager, ScreenManager, AnimationManager, MarqueeManager, NotificationManager, ClockManager, WeatherManager, and IdleManager",
+      "Implemented animated progress tracking and marquee scrolling",
+      "Built the idle clock + weather interface",
+      "Added track-change notifications",
+      "Implemented physical system-volume control",
+      "Built the LumiDesk desktop launcher with backend startup, configuration, system-tray controls, logging, and packaging",
+      "Added API-key authentication between the ESP32 and backend",
     ],
+
     results:
-      "Works with Spotify, YouTube, or any app reporting to Windows' media session — no per-service API keys or OAuth needed. Runs on a single 1.3\" SH1106 OLED over I2C.",
+      "Provides a near-real-time physical media display that works across Windows media applications without service-specific OAuth. The system combines an ESP32 embedded interface, Windows media APIs, a local FastAPI backend, synced lyrics, weather, notifications, volume control, and a standalone desktop launcher.",
   },
+
   {
     id: "pyramid-compress",
     name: "Pyramid Compress",
     description:
-      "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction and PSNR reporting to measure quality loss. Ships as a Python CLI and a drag-and-drop web app — both run entirely client-side/local, no images ever leave the device.",
-    tags: ["Python", "NumPy", "Pillow", "JavaScript"],
+      "Image-compression system implemented from the underlying pixel operations using recursive pyramid downsampling, nearest-neighbor or bilinear reconstruction, and PSNR-based quality analysis. Includes both a Python CLI and a fully client-side browser implementation.",
+    tags: ["Python", "NumPy", "Pillow", "JavaScript", "Image Processing"],
     url: "https://github.com/Aravkataria/pyramid-compression",
     demo: "https://aravkataria.github.io/pyramid-compression/",
     status: "open-source",
     statusLabel: "Open Source",
+    siteVisitors: "150+",
+
     what:
-      "A recursive image compression tool built on 2×2 block averaging. Ships as both a Python CLI and a drag-and-drop web app that runs entirely client-side, so images never leave the device.",
+      "Pyramid Compress explores image compression by repeatedly reducing image resolution through pixel-block averaging and storing the resulting pyramid representation. The compressed representation can then be reconstructed using nearest-neighbor or bilinear interpolation. The project provides both a Python command-line implementation and a browser implementation using JavaScript and Canvas.",
+
     why:
-      "Built to implement image compression by hand — block averaging down, then nearest-neighbor or bilinear reconstruction back up — instead of relying on an existing codec, with PSNR reporting to see exactly what each compression level costs in quality.",
+      "Built to understand image compression at the algorithmic level rather than hiding the process behind an existing codec. The project makes the relationship between compression level, reconstruction method, and visual quality measurable through PSNR.",
+
     how: [
-      "Image",
-      "Recursive 2×2 block averaging (compress)",
-      "Compressed pyramid + .meta.txt sidecar",
-      "Nearest-neighbor or bilinear reconstruction (decompress)",
-      "PSNR quality report",
+      "Input image",
+      "Recursive pyramid downsampling",
+      "Progressive resolution reduction",
+      "Compressed pyramid representation",
+      "Metadata sidecar for reconstruction",
+      "Nearest-neighbor reconstruction",
+      "Bilinear reconstruction",
+      "PSNR quality analysis",
     ],
+
     contribution: [
-      "Implemented the recursive 2×2 block-averaging compressor and both reconstruction modes",
-      "Built the PSNR quality-loss reporting",
-      "Built the Python CLI (pyramid_compress.py, using Pillow + NumPy)",
-      "Built the drag-and-drop web app and landing page, running entirely client-side",
+      "Implemented the recursive pyramid-compression algorithm",
+      "Built the Python compression and decompression pipeline",
+      "Implemented nearest-neighbor reconstruction",
+      "Implemented bilinear reconstruction",
+      "Added metadata required to reconstruct compressed images",
+      "Implemented PSNR-based quality measurement",
+      "Built the browser implementation using vanilla JavaScript and Canvas",
+      "Created the drag-and-drop web interface",
+      "Added client-side compression/decompression and live quality comparison",
+      "Designed the system so image data remains local to the user's device",
     ],
+
     results:
-      "CLI and web app both run fully offline / client-side — no images ever leave the device. PSNR reporting shows the exact quality cost at each compression level.",
+      "Provides a complete compression → reconstruction → quality-analysis pipeline. The Python implementation runs locally, while the browser implementation performs processing entirely client-side with no image uploads. PSNR measurements expose the quality trade-off at different compression levels.",
   },
+
   {
     id: "gan-loss-landscape",
     name: "GAN Loss Landscape",
     description:
-      "Visualizes the loss landscape of a trained GAN by perturbing its parameters along two random directions and plotting the resulting surface — 2D contour maps, 3D meshes, and 1D slices — at adjustable grid resolutions, to see how flat or sharp the learned minima actually are.",
-    tags: ["Python", "PyTorch", "Matplotlib"],
+      "Research tool for visualizing the optimization geometry of a trained GAN by perturbing its parameters along random directions and measuring Generator loss across a configurable parameter-space grid.",
+    tags: ["Python", "PyTorch", "Matplotlib", "Deep Learning", "Research"],
     url: "https://github.com/Aravkataria/GAN-loss-landscape-visualization",
     status: "research",
     statusLabel: "Research",
+    siteVisitors: "50+",
+
     what:
-      "Visualizes the loss landscape of a trained GAN by perturbing its parameters along two random directions and plotting the resulting surface at adjustable grid resolutions.",
+      "GAN Loss Landscape probes the parameter space around a trained GAN to visualize how Generator loss changes under controlled perturbations. Two random directions are sampled through the Generator's parameter space, and loss is evaluated across a two-dimensional grid to reconstruct the local optimization landscape.",
+
     why:
-      "Built to see how flat or sharp a GAN's learned minima actually are — visualizing the loss surface directly, instead of only watching the loss number move during training.",
+      "Built to study the geometry of GAN optimization rather than looking only at scalar training-loss curves. Visualizing the surrounding parameter space makes the shape, sharpness, flatness, and sensitivity of learned regions directly observable.",
+
     how: [
-      "Trained GAN checkpoint",
-      "Two random parameter perturbation directions",
-      "Loss evaluated across a parameter grid",
-      "2D contour map / 3D mesh / 1D slice",
+      "Pretrained Generator + Discriminator",
+      "Two random parameter-space directions",
+      "Controlled Generator parameter perturbations",
+      "Generator-loss evaluation across a 2D grid",
+      "Configurable GRID_STEPS resolution",
+      "1D loss-landscape slices",
+      "2D contour / heatmap visualization",
+      "3D loss-surface visualization",
+      "PLY mesh export",
+      "Loss + success-rate comparison",
     ],
+
     contribution: [
-      "Implemented the parameter-perturbation sampling along two random directions",
-      "Built the loss-surface evaluation across adjustable grid resolutions",
-      "Built the 2D contour, 3D mesh, and 1D slice visualizations in Matplotlib",
+      "Implemented parameter-space perturbation along two random directions",
+      "Built the loss-evaluation pipeline across a configurable parameter grid",
+      "Added adjustable GRID_STEPS for coarse-to-fine landscape analysis",
+      "Implemented 2D topographic and heatmap visualizations",
+      "Implemented 3D loss-surface visualization",
+      "Added 3D PLY mesh generation for external visualization",
+      "Implemented 1D parameter-direction slices",
+      "Added dual-axis loss and success-rate analysis",
+      "Built a workflow for comparing low- and high-resolution landscapes",
     ],
+
     results:
-      "Produces 2D contour maps, 3D meshes, and 1D slices of the loss surface at adjustable grid resolutions.",
+      "Produces 1D, 2D, and 3D representations of a trained GAN's local optimization landscape, including contour maps, heatmaps, 3D surfaces, and exportable PLY meshes. Higher GRID_STEPS values reveal finer landscape structure at increased computational cost.",
   },
 ];
 
