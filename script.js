@@ -325,10 +325,12 @@ function renderProjects() {
       </div>
       <p>${escapeHtml(p.description)}</p>
       <div class="project-card-meta">
-        <span class="project-status" data-status="${p.status}">
-          <span class="project-status-dot"></span>${escapeHtml(p.statusLabel)}
-        </span>
-        ${p.siteVisitors ? `<span class="project-visitors">${escapeHtml(p.siteVisitors)} visitors</span>` : ""}
+        <div class="project-card-meta-info">
+          <span class="project-status" data-status="${p.status}">
+            <span class="project-status-dot"></span>${escapeHtml(p.statusLabel)}
+          </span>
+          ${p.siteVisitors ? `<span class="project-visitors">${escapeHtml(p.siteVisitors)} visitors</span>` : ""}
+        </div>
         ${
           p.demo
             ? `<a class="project-demo-btn" href="${p.demo}" target="_blank" rel="noopener" aria-label="Open live demo of ${escapeHtml(p.name)}" data-pd-stop>
