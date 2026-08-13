@@ -83,7 +83,7 @@ const PROJECTS = [
       "Recursive image compression tool built on 2x2 block averaging, with nearest-neighbor and bilinear reconstruction and PSNR reporting to measure quality loss. Ships as a Python CLI and a drag-and-drop web app — both run entirely client-side/local, no images ever leave the device.",
     tags: ["Python", "NumPy", "Pillow", "JavaScript"],
     url: "https://github.com/Aravkataria/pyramid-compression",
-    demo: "https://aravkataria.github.io/pyramid-compression/"
+    demo: "https://aravkataria.github.io/pyramid-compression/",
     status: "open-source",
     statusLabel: "Open Source",
     what:
@@ -293,32 +293,66 @@ function setupProjectDetail() {
   let activeProject = null;
   let triggerEl = null;
   let stopScrollMotion = null;
+  let closing = false;
+  let openRafId = null;
+
+  // FLIP-style morph: measure the clicked card's rect and the panel's
+  // already-laid-out final rect, then instantly (no transition) set the
+  // panel's transform so it exactly overlays the card — same position,
+  // same size. Clearing that inline transform on the next frame lets the
+  // panel's normal CSS transition animate it back to identity (full
+  // size, centered), so it visibly grows out of the card. Reversed for
+  // closing. Only translate + scale are used (never top/left/width/
+  // height), so this stays compositor-only — cheap even on low-end
+  // devices, no layout thrashing.
+  function rectDelta(fromRect, toRect) {
+    return {
+      x: (fromRect.left + fromRect.width / 2) - (toRect.left + toRect.width / 2),
+      y: (fromRect.top + fromRect.height / 2) - (toRect.top + toRect.height / 2),
+      sx: fromRect.width / toRect.width,
+      sy: fromRect.height / toRect.height,
+    };
+  }
 
   function openProject(project, fromEl) {
-    if (!project) return;
+    if (!project || closing) return;
     activeProject = project;
     triggerEl = fromEl || null;
 
     renderProjectDetail(project);
 
-    // Anchor the panel's scale/opacity transform to roughly where the
-    // clicked card sits, so the window reads as expanding from the
-    // card rather than appearing from nowhere.
-    if (fromEl && !reduceMotion) {
-      const r = fromEl.getBoundingClientRect();
-      const originX = ((r.left + r.width / 2) / window.innerWidth) * 100;
-      const originY = ((r.top + r.height / 2) / window.innerHeight) * 100;
-      panel.style.setProperty("--pd-origin-x", `${originX}%`);
-      panel.style.setProperty("--pd-origin-y", `${originY}%`);
-    } else {
-      panel.style.removeProperty("--pd-origin-x");
-      panel.style.removeProperty("--pd-origin-y");
-    }
-
     overlay.removeAttribute("aria-hidden");
     overlay.classList.add("is-open");
     document.documentElement.classList.add("pd-scroll-lock");
     scrollEl.scrollTop = 0;
+
+    if (fromEl && !reduceMotion) {
+      // Panel is already at its final centered rect at this point (the
+      // "Last" state) — measuring it now, synchronously, happens before
+      // the browser paints, so nothing flashes at the wrong size.
+      const cardRect = fromEl.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const d = rectDelta(cardRect, panelRect);
+
+      panel.classList.add("pd-panel--morphing");
+      panel.style.transition = "none";
+      panel.style.transform = `translate3d(${d.x}px, ${d.y}px, 0) scale(${d.sx}, ${d.sy})`;
+      panel.style.opacity = "0.5";
+      panel.getBoundingClientRect(); // force the above to apply before we change it again
+
+      openRafId = requestAnimationFrame(() => {
+        openRafId = null;
+        panel.style.transition = "";
+        panel.style.transform = "";
+        panel.style.opacity = "";
+      });
+
+      panel.addEventListener("transitionend", function onOpenEnd(e) {
+        if (e.target !== panel || e.propertyName !== "transform") return;
+        panel.removeEventListener("transitionend", onOpenEnd);
+        panel.classList.remove("pd-panel--morphing");
+      });
+    }
 
     // Focus moves into the window; Escape/outside-click/close button
     // all route back through closeProject.
@@ -331,8 +365,39 @@ function setupProjectDetail() {
   }
 
   function closeProject() {
-    if (!overlay.classList.contains("is-open")) return;
+    if (!overlay.classList.contains("is-open") || closing) return;
+
+    if (openRafId) {
+      cancelAnimationFrame(openRafId);
+      openRafId = null;
+    }
+
+    const canMorph = triggerEl && document.contains(triggerEl) && !reduceMotion;
+
+    // Backdrop fades via its own CSS transition as soon as is-open is
+    // removed; the panel's shrink-into-the-card morph runs alongside it
+    // on its own timing, then cleanup runs once that's done.
     overlay.classList.remove("is-open");
+
+    if (canMorph) {
+      closing = true;
+      const cardRect = triggerEl.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const d = rectDelta(cardRect, panelRect);
+
+      panel.classList.add("pd-panel--morphing");
+      panel.style.transition = "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease";
+      panel.getBoundingClientRect(); // force the transition above to apply first
+      panel.style.transform = `translate3d(${d.x}px, ${d.y}px, 0) scale(${d.sx}, ${d.sy})`;
+      panel.style.opacity = "0";
+
+      setTimeout(finishClose, 380);
+    } else {
+      finishClose();
+    }
+  }
+
+  function finishClose() {
     overlay.setAttribute("aria-hidden", "true");
     document.documentElement.classList.remove("pd-scroll-lock");
     document.removeEventListener("keydown", handleKeydown, true);
@@ -342,11 +407,17 @@ function setupProjectDetail() {
       stopScrollMotion = null;
     }
 
+    panel.classList.remove("pd-panel--morphing");
+    panel.style.transition = "";
+    panel.style.transform = "";
+    panel.style.opacity = "";
+
     if (triggerEl && document.contains(triggerEl)) {
       triggerEl.focus();
     }
     activeProject = null;
     triggerEl = null;
+    closing = false;
   }
 
   function handleKeydown(e) {
