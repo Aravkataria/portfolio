@@ -1,6 +1,6 @@
 const PROFILE = {
-  email: "aravkataria2009@gmail.com",          // <-- put your real email here
-  linkedin: "https://www.linkedin.com/in/arav-kataria-59512b423/", // <-- put your LinkedIn URL here
+  email: "aravkataria2009@gmail.com",          
+  linkedin: "https://www.linkedin.com/in/arav-kataria-59512b423/", 
   github: "https://github.com/Aravkataria",
 };
 
@@ -199,27 +199,12 @@ const SKILLS = [
    No need to edit unless you want to change behavior.
    ===================================================================== */
 
-// Every key on a PROJECTS object that's actually read somewhere in
-// renderProjects()/renderProjectDetail() must be listed here. This is
-// what makes validateProjectData() below able to catch the exact bug
-// that happened with siteVisitors: a field gets added to the data but
-// nobody wires it into the HTML, so it silently does nothing.
-//
-// Adding a new field to PROJECTS? Two steps, not one:
-//   1. Read it somewhere in renderProjects() or renderProjectDetail().
-//   2. Add its name to this set.
-// Skip step 2 and validateProjectData() will warn you in the console
-// on every page load until you do.
 const RENDERED_PROJECT_FIELDS = new Set([
   "id", "name", "description", "tags", "url", "demo", "docs",
   "status", "statusLabel", "siteVisitors",
   "what", "why", "how", "contribution", "results",
 ]);
 
-// Dev-time sanity check, not a feature — walks PROJECTS and warns
-// (doesn't throw) about any field that isn't in RENDERED_PROJECT_FIELDS.
-// Catches "I added data but forgot to render it" before it becomes a
-// "why isn't this showing up" moment.
 function validateProjectData() {
   PROJECTS.forEach((p) => {
     Object.keys(p).forEach((key) => {
@@ -254,10 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Tries the real WebGL fluid simulation first (best look — actual swirling
-// fluid dynamics). If WebGL2 or the float-texture extensions it needs
-// aren't available, or setup fails for any reason, it falls back to the
-// canvas 2D ink-drop system, which is fully self-contained and proven.
 function initBackground() {
   const canvas = document.getElementById("paintCanvas");
   if (!canvas) return;
@@ -388,15 +369,7 @@ function setupProjectDetail() {
   let closing = false;
   let openRafId = null;
 
-  // FLIP-style morph: measure the clicked card's rect and the panel's
-  // already-laid-out final rect, then instantly (no transition) set the
-  // panel's transform so it exactly overlays the card — same position,
-  // same size. Clearing that inline transform on the next frame lets the
-  // panel's normal CSS transition animate it back to identity (full
-  // size, centered), so it visibly grows out of the card. Reversed for
-  // closing. Only translate + scale are used (never top/left/width/
-  // height), so this stays compositor-only — cheap even on low-end
-  // devices, no layout thrashing.
+
   function rectDelta(fromRect, toRect) {
     return {
       x: (fromRect.left + fromRect.width / 2) - (toRect.left + toRect.width / 2),
@@ -446,14 +419,10 @@ function setupProjectDetail() {
       });
     }
 
-    // Focus moves into the window; Escape/outside-click/close button
-    // all route back through closeProject.
     closeBtn.focus();
     document.addEventListener("keydown", handleKeydown, true);
 
-    //if (!reduceMotion) {
-     // stopScrollMotion = setupProjectDetailScrollMotion(scrollEl);
-    //}
+
   }
 
   function closeProject() {
@@ -466,9 +435,6 @@ function setupProjectDetail() {
 
     const canMorph = triggerEl && document.contains(triggerEl) && !reduceMotion;
 
-    // Backdrop fades via its own CSS transition as soon as is-open is
-    // removed; the panel's shrink-into-the-card morph runs alongside it
-    // on its own timing, then cleanup runs once that's done.
     overlay.classList.remove("is-open");
 
     if (canMorph) {
@@ -523,9 +489,6 @@ function setupProjectDetail() {
     }
   }
 
-  // Card interactions: click anywhere on the card body opens the
-  // detail window, except on elements marked data-pd-stop (the GitHub
-  // icon and Try Demo button), which keep navigating directly.
   grid.addEventListener("click", (e) => {
     if (e.target.closest("[data-pd-stop]")) return;
     const card = e.target.closest(".project-card");
@@ -1515,6 +1478,7 @@ function setupThemeToggle() {
   if (!btn) return;
 
   const root = document.documentElement;
+  const CROSSFADE_MS = 850; // slightly longer than the 0.8s CSS transition so it never gets cut off
 
   function isDark() {
     return root.getAttribute("data-theme") === "dark";
@@ -1529,13 +1493,25 @@ function setupThemeToggle() {
     btn.setAttribute("aria-pressed", String(dark));
   }
 
+  // Wraps a theme flip so every element crossfades smoothly for one
+  // switch, then hands hover/interaction timing straight back to
+  // each component's own (faster) transition — nothing else on the
+  // page changes speed.
+  function applyWithCrossfade(dark) {
+    root.classList.add("theme-transitioning");
+    apply(dark);
+    window.setTimeout(() => {
+      root.classList.remove("theme-transitioning");
+    }, CROSSFADE_MS);
+  }
+
   // Sync the button's a11y state with whatever the inline <head>
   // script already applied before this ran.
   apply(isDark());
 
   btn.addEventListener("click", () => {
     const dark = !isDark();
-    apply(dark); // always runs, so the toggle visibly works even if storage is blocked
+    applyWithCrossfade(dark); // always runs, so the toggle visibly works even if storage is blocked
     try {
       localStorage.setItem("theme", dark ? "dark" : "light");
     } catch (err) {
@@ -1556,7 +1532,7 @@ function setupThemeToggle() {
           /* storage blocked — just follow the OS preference */
         }
         if (explicit) return; // explicit choice wins
-        apply(e.matches);
+        applyWithCrossfade(e.matches);
       });
   }
 }
