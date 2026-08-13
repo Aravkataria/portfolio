@@ -1,4 +1,4 @@
-  const PROFILE = {
+const PROFILE = {
   email: "aravkataria2009@gmail.com",          // <-- put your real email here
   linkedin: "https://www.linkedin.com/in/arav-kataria-59512b423/", // <-- put your LinkedIn URL here
   github: "https://github.com/Aravkataria",
@@ -199,6 +199,41 @@ const SKILLS = [
    No need to edit unless you want to change behavior.
    ===================================================================== */
 
+// Every key on a PROJECTS object that's actually read somewhere in
+// renderProjects()/renderProjectDetail() must be listed here. This is
+// what makes validateProjectData() below able to catch the exact bug
+// that happened with siteVisitors: a field gets added to the data but
+// nobody wires it into the HTML, so it silently does nothing.
+//
+// Adding a new field to PROJECTS? Two steps, not one:
+//   1. Read it somewhere in renderProjects() or renderProjectDetail().
+//   2. Add its name to this set.
+// Skip step 2 and validateProjectData() will warn you in the console
+// on every page load until you do.
+const RENDERED_PROJECT_FIELDS = new Set([
+  "id", "name", "description", "tags", "url", "demo", "docs",
+  "status", "statusLabel", "siteVisitors",
+  "what", "why", "how", "contribution", "results",
+]);
+
+// Dev-time sanity check, not a feature — walks PROJECTS and warns
+// (doesn't throw) about any field that isn't in RENDERED_PROJECT_FIELDS.
+// Catches "I added data but forgot to render it" before it becomes a
+// "why isn't this showing up" moment.
+function validateProjectData() {
+  PROJECTS.forEach((p) => {
+    Object.keys(p).forEach((key) => {
+      if (!RENDERED_PROJECT_FIELDS.has(key)) {
+        console.warn(
+          `[portfolio] PROJECTS["${p.id}"].${key} is set but nothing renders it. ` +
+          `Wire it into renderProjects()/renderProjectDetail() and add "${key}" to RENDERED_PROJECT_FIELDS, ` +
+          `or remove it — otherwise it'll just sit in the data doing nothing.`
+        );
+      }
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Each step runs independently — if one throws, it's logged to the
   // console but every other feature (projects, skills, background,
@@ -211,6 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
   safeRun("setupMessageForm", setupMessageForm);
   safeRun("setupThemeToggle", setupThemeToggle);
   safeRun("setupProjectDetail", setupProjectDetail);
+  safeRun("validateProjectData", validateProjectData);
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!reduceMotion) {
@@ -292,6 +328,7 @@ function renderProjects() {
         <span class="project-status" data-status="${p.status}">
           <span class="project-status-dot"></span>${escapeHtml(p.statusLabel)}
         </span>
+        ${p.siteVisitors ? `<span class="project-visitors">${escapeHtml(p.siteVisitors)} visitors</span>` : ""}
         ${
           p.demo
             ? `<a class="project-demo-btn" href="${p.demo}" target="_blank" rel="noopener" aria-label="Open live demo of ${escapeHtml(p.name)}" data-pd-stop>
@@ -533,6 +570,21 @@ function renderProjectDetail(p) {
   document.getElementById("pdDesc").textContent = p.description;
   document.getElementById("pdStatus").setAttribute("data-status", p.status);
   document.getElementById("pdStatusLabel").textContent = p.statusLabel;
+
+  // pdVisitors isn't in index.html by default — created once, on demand,
+  // and re-used on every subsequent open so we don't duplicate it.
+  const pdMeta = document.querySelector(".pd-meta");
+  let visitorsEl = document.getElementById("pdVisitors");
+  if (!visitorsEl && pdMeta) {
+    visitorsEl = document.createElement("span");
+    visitorsEl.id = "pdVisitors";
+    visitorsEl.className = "project-visitors";
+    pdMeta.appendChild(visitorsEl);
+  }
+  if (visitorsEl) {
+    visitorsEl.textContent = p.siteVisitors ? `${p.siteVisitors} visitors` : "";
+    visitorsEl.style.display = p.siteVisitors ? "" : "none";
+  }
 
   document.getElementById("pdTech").innerHTML = p.tags
     .map((t) => `<span>${escapeHtml(t)}</span>`)
