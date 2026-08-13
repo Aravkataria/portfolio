@@ -145,7 +145,8 @@ a { color: inherit; text-decoration: none; }
   filter: saturate(1.4) contrast(1.08);
   mix-blend-mode: normal;
   opacity: 1;
-  transition: filter 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: filter;
+  transition: filter 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* The fluid sim's shader math composites its dye as "ink absorbed from
