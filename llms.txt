@@ -1,0 +1,23 @@
+# Arav — Developer Portfolio
+
+> Personal portfolio site for Arav, a developer building independent projects across AI/ML, embedded systems, and dev tooling — ground-up, hands-on, no shortcuts. Static single-page site (HTML/CSS/JS, no framework), deployed via GitHub Pages at https://aravkataria.github.io/portfolio/.
+
+Arav's focus areas: AI / ML, embedded systems, dev tooling. Approach: ground-up, hands-on experimentation rather than relying on existing libraries or APIs where the underlying mechanics are the point. Currently training a small language model from scratch.
+
+## Site structure
+
+- [index.html](index.html): Page markup — hero/intro, about, projects grid, skills cloud, contact form, and a project-detail overlay populated from script.js
+- [script.js](script.js): All content lives here as data — `PROJECTS` array (name, description, tags, links, and detailed what/why/how/contribution/results for each project) and `SKILLS` array, plus rendering logic and an ink-in-water canvas background animation
+- [style.css](style.css): All styling, including light/dark theme variables
+
+## Projects featured
+
+- [Arch-Ai-Tex](https://github.com/Aravkataria/Arch-Ai-Tex): AI-powered floor-plan generation combining GAN-based image generation, Random Forest layout optimization, semantic segmentation, and real-time room measurement via Arduino + ESP32 sensors. Demo: https://aravkataria.github.io/Arch-Ai-Tex/
+- [LumiDesk](https://github.com/Aravkataria/LumiDesk): ESP32 + OLED desktop media display that reads Windows' system-wide media sessions (no streaming-service API/OAuth dependency) — synced lyrics, weather, notifications, volume control, and a desktop launcher
+- [Pyramid Compress](https://github.com/Aravkataria/pyramid-compression): Image compression built from raw pixel operations — recursive pyramid downsampling, nearest-neighbor/bilinear reconstruction, PSNR quality analysis. Python CLI + a fully client-side browser implementation. Demo: https://aravkataria.github.io/pyramid-compression/
+- [GAN Loss Landscape](https://github.com/Aravkataria/GAN-loss-landscape-visualization): Research tool visualizing a trained GAN's optimization geometry by perturbing parameters along random directions and plotting Generator loss across a configurable grid (1D/2D/3D visualizations, PLY mesh export)
+
+## Contact
+
+- GitHub: https://github.com/Aravkataria
+- LinkedIn: https://www.linkedin.com/in/arav-kataria-59512b423/
