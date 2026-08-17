@@ -15,7 +15,7 @@ const PROJECTS = [
     demo: "https://aravkataria.github.io/Arch-Ai-Tex/",
     status: "open-source",
     statusLabel: "Open Source",
-    siteVisitors: "300+",
+    siteVisitors: "500+",
 
     what:
       "Arch-Ai-Tex explores an end-to-end pipeline for automatically generating and analyzing architectural floor plans. The system combines a GAN for floor-plan generation, a Random Forest-based layout optimizer with heuristic constraints, and a segmentation pipeline for identifying walls and structural regions. It also includes a real-time measurement system that uses Arduino Mega and ESP32-connected sensors to capture physical room dimensions.",
@@ -57,7 +57,7 @@ const PROJECTS = [
     url: "https://github.com/Aravkataria/LumiDesk",
     status: "open-source",
     statusLabel: "Open Source",
-    siteVisitors: "100+",
+    siteVisitors: "200+",
 
     what:
       "LumiDesk turns an ESP32 and OLED into a dedicated physical display for whatever is playing on a Windows computer. It reads Windows' Global System Media Transport Controls, allowing it to work across Spotify, YouTube, browser tabs, and other applications that expose playback information to Windows. A local FastAPI backend handles media data, lyrics, weather, and communication with the ESP32.",
@@ -105,7 +105,7 @@ const PROJECTS = [
     demo: "https://aravkataria.github.io/pyramid-compression/",
     status: "open-source",
     statusLabel: "Open Source",
-    siteVisitors: "150+",
+    siteVisitors: "350+",
 
     what:
       "Pyramid Compress explores image compression by repeatedly reducing image resolution through pixel-block averaging and storing the resulting pyramid representation. The compressed representation can then be reconstructed using nearest-neighbor or bilinear interpolation. The project provides both a Python command-line implementation and a browser implementation using JavaScript and Canvas.",
@@ -150,7 +150,7 @@ const PROJECTS = [
     url: "https://github.com/Aravkataria/GAN-loss-landscape-visualization",
     status: "research",
     statusLabel: "Research",
-    siteVisitors: "50+",
+    siteVisitors: "100+",
 
     what:
       "GAN Loss Landscape probes the parameter space around a trained GAN to visualize how Generator loss changes under controlled perturbations. Two random directions are sampled through the Generator's parameter space, and loss is evaluated across a two-dimensional grid to reconstruct the local optimization landscape.",
