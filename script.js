@@ -96,8 +96,8 @@ const PROJECTS = [
   },
 
   {
-    id: "pyramid-compress",
-    name: "Pyramid Compress",
+    id: "pyramid-compression",
+    name: "Pyramid compression",
     description:
       "Image-compression system implemented from the underlying pixel operations using recursive pyramid downsampling, nearest-neighbor or bilinear reconstruction, and PSNR-based quality analysis. Includes both a Python CLI and a fully client-side browser implementation.",
     tags: ["Python", "NumPy", "Pillow", "JavaScript", "Image Processing"],
