@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VAJRA — Case Study</title>
+<meta name="description" content="VAJRA: Evidence-driven autonomous cyber-reasoning and software repair platform with multithreaded Rust core and SMT formal verification." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css" />
+
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("theme");
+      var theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      if (theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (err) {
+      console.error("[portfolio] theme init failed:", err);
+    }
+  })();
+</script>
+</head>
+<body>
+  <canvas id="paintCanvas" class="paint-canvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a href="../index.html" class="brand">Arav<span class="brand-dot">.</span></a>
+    <ul class="topbar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="index.html" class="is-active">Projects</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="topbar-actions">
+      <a class="topbar-cta" href="https://github.com/Aravkataria/VAJRA" target="_blank" rel="noopener">
+        <span>View Repo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <span class="theme-toggle-label label-light">Light</span>
+        <span class="theme-toggle-label label-dark">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="section case-study-hero">
+      <div class="breadcrumb-nav">
+        <a href="index.html" class="breadcrumb-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to Projects
+        </a>
+      </div>
+
+      <p class="section-label">01 / Flagship Project</p>
+      <h1 class="section-title" style="font-size: clamp(2.4rem, 6vw, 3.6rem); margin-bottom: 12px;">
+        VAJRA
+      </h1>
+      <p class="hero-sub" style="font-size: 1.15rem; max-width: 680px; margin-bottom: 20px;">
+        Evidence-Driven Autonomous Cyber-Reasoning &amp; Software Repair Platform.
+      </p>
+
+      <div class="cs-header-meta">
+        <span class="project-status" data-status="production">
+          <span class="project-status-dot"></span>Production / Research
+        </span>
+        <span class="project-visitors">1,200+ visitors</span>
+        <div class="project-tags">
+          <span>Rust</span>
+          <span>Python</span>
+          <span>Rayon</span>
+          <span>SMT Solver</span>
+          <span>Cybersecurity</span>
+          <span>AI Reasoning</span>
+        </div>
+      </div>
+
+      <div class="cs-hero-actions">
+        <a href="https://Aravkataria.github.io/VAJRA/" target="_blank" rel="noopener" class="btn btn--primary btn--sm">
+          Launch Live Web Edition
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://github.com/Aravkataria/VAJRA" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">
+          View on GitHub
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <!-- VAJRA Live Frontend Screenshots -->
+      <div class="cs-preview-media" style="margin-bottom: 24px;">
+        <span class="cs-preview-badge">Web Client Landing</span>
+        <img src="../assets/projects/vajra-frontend-landing.png" alt="VAJRA Web Client Interface" />
+      </div>
+
+      <div class="cs-preview-media" style="margin-top: 0; margin-bottom: 48px;">
+        <span class="cs-preview-badge">Forensic Reasoning Workspace</span>
+        <img src="../assets/projects/vajra-frontend-workspace.jpg" alt="VAJRA Autonomous Cyber-Reasoning Terminal &amp; Audit Workspace" />
+      </div>
+
+      <!-- Content Sections -->
+      <section class="cs-section">
+        <h2 class="cs-section-title">What It Is</h2>
+        <div class="cs-prose">
+          <p>
+            VAJRA is an evidence-driven cyber-reasoning and software-repair system that connects the entire vulnerability remediation lifecycle end to end. Instead of merely alerting developers with a list of issues, VAJRA discovers vulnerabilities through a static AST and a parallel multithreaded Rust scanner, models exploit causal chains, synthesizes minimal atomic patches, and verifies every proposed patch through a 7-stage proof matrix.
+          </p>
+          <p>
+            The platform features a dual-shell client: a 100% serverless web client running directly on client hardware, alongside a native cross-platform desktop/CLI edition powered by a Rust core backend.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Why It Was Built</h2>
+        <div class="cs-prose">
+          <p>
+            Traditional vulnerability scanners produce massive piles of alert fatigue, and recent attempts to slap LLMs onto security workflows suffer from a lethal design flaw: <strong>LLMs hallucinate invalid or breaking patches when trusted as the source of truth</strong>.
+          </p>
+          <p>
+            VAJRA was designed around a strict foundational axiom: <em>an AI model should never grade its own homework</em>. Specialized deterministic static analyzers produce concrete evidence, reasoning models synthesize candidate diffs, and an independent formal SMT solver verifies correctness before any patch is accepted.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">System Architecture &amp; Workflow</h2>
+        <div class="pd-flow" style="max-width: 520px; margin: 24px auto;">
+          <div class="pd-flow-step">1. Discovery: Static AST + Parallel Rayon Rust Scanner (vajra-core)</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">2. Confirmation: Tier-1 Security Analyst Model</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">3. Prioritization: Risk Score &amp; Blast Radius Engine</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">4. Memory &amp; Intent: Universal Multi-Language Code Property Graph</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">5. Synthesis: Deterministic Fast Path vs Tier-2 Reasoning Model</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">6. Independent Prover: 7-Stage Adversarial Proof Matrix + SMT Solver</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">7. Assurance: Cryptographic Repair Record &amp; Atomic Patch</div>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Key Contributions &amp; Engineering</h2>
+        <ul class="cs-key-points">
+          <li><strong>3-Tier Sovereign AI Architecture:</strong> Separated vulnerability confirmation, patch synthesis, and adversarial verification into independent, non-colluding model pipelines.</li>
+          <li><strong>vajra-core in Multithreaded Rust:</strong> Built high-throughput file-tree scanning and AST traversal with Rayon, providing instant scanning across large repositories.</li>
+          <li><strong>SMT Formal Constraint Solver:</strong> Integrated formal constraint satisfaction to mathematically verify that patch conditions cannot trigger out-of-bounds or invalid states.</li>
+          <li><strong>Universal Code Property Graph (CPG):</strong> Mapped cross-file dependencies and semantic flow to evaluate the blast radius of each patch.</li>
+          <li><strong>Dual Client Ecosystem:</strong> Shipped a 100% serverless browser edition and a cross-platform desktop binary across macOS, Windows, and Linux.</li>
+        </ul>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Results &amp; Impact</h2>
+        <div class="cs-prose">
+          <p>
+            100% test pass rate across 46 unit and integration test suites. VAJRA achieves sub-second vulnerability confirmation and produces tamper-evident cryptographic assurance logs for every repair. The project has gathered 1,200+ unique visitors and is actively maintained as open source research.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bottom Navigation -->
+      <div class="cs-footer-nav">
+        <a href="index.html" class="btn btn--ghost btn--sm">
+          &larr; All Projects
+        </a>
+        <a href="arch-ai-tex.html" class="btn btn--primary btn--sm">
+          Next: Arch-Ai-Tex &rarr;
+        </a>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <p>Built by Arav — <span id="year"></span></p>
+    </footer>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>

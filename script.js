@@ -6,6 +6,47 @@ const PROFILE = {
 
 const PROJECTS = [
   {
+    id: "vajra",
+    name: "VAJRA",
+    description:
+      "Evidence-driven autonomous cyber-reasoning and software repair system with a 3-tier independent AI model architecture, multithreaded Rust core engine, and a 7-stage formal SMT verification matrix.",
+    tags: ["Rust", "Python", "Rayon", "SMT Solver", "Cybersecurity", "AI Reasoning"],
+    url: "https://github.com/Aravkataria/VAJRA",
+    demo: "https://Aravkataria.github.io/VAJRA/",
+    status: "production",
+    statusLabel: "Production / Research",
+    siteVisitors: "1,200+",
+    featured: true,
+
+    what:
+      "VAJRA is an evidence-driven cyber-reasoning and software-repair platform that automates the complete vulnerability remediation lifecycle: static AST analysis, risk scoring, causal intent retrieval, minimal patch synthesis, and independent formal verification.",
+
+    why:
+      "Built on the core thesis that an AI model should never grade its own homework. Specialized analyzers produce concrete evidence, reasoning models synthesize minimal patches, and an independent formal SMT solver rigorously proves correctness before any patch is committed.",
+
+    how: [
+      "Discovery: Static AST + multithreaded Rust (Rayon) scanner",
+      "Confirmation: Tier-1 Security Analyst Model",
+      "Risk Score & Blast Radius prioritization engine",
+      "Retrieval: Causal intent & learned memory (.vajra/knowledge_graph.json)",
+      "Patch Synthesis: Deterministic Fast Path vs Tier-2 Reasoning Model",
+      "Verification: Tier-3 Adversarial 7-Stage Proof Matrix + SMT solver",
+      "Execution: Atomic patch application + cryptographic repair assurance record",
+    ],
+
+    contribution: [
+      "Architected the 3-tier independent AI cyber-reasoning engine",
+      "Built the native multithreaded Rust core engine (vajra-core) using Rayon",
+      "Designed the 7-stage formal verification matrix with SMT constraint solving",
+      "Implemented the universal multi-language Code Property Graph (CPG) engine",
+      "Developed both the 100% serverless web client and native desktop application",
+      "Created the patch minimality and cyclomatic delta evaluator",
+    ],
+
+    results:
+      "Delivered a production-ready cyber reasoning system supporting macOS, Windows, and Linux with a 100% test pass rate across 46 unit test suites, sub-second vulnerability confirmation, and formally verifiable cryptographic assurance records.",
+  },
+  {
     id: "arch-ai-tex",
     name: "Arch-Ai-Tex",
     description:
@@ -143,6 +184,7 @@ const PROJECTS = [
 
   {
     id: "gan-loss-landscape",
+    featured: false,
     name: "GAN Loss Landscape",
     description:
       "Research tool for visualizing the optimization geometry of a trained GAN by perturbing its parameters along random directions and measuring Generator loss across a configurable parameter-space grid.",
@@ -201,7 +243,7 @@ const SKILLS = [
 
 const RENDERED_PROJECT_FIELDS = new Set([
   "id", "name", "description", "tags", "url", "demo", "docs",
-  "status", "statusLabel", "siteVisitors",
+  "status", "statusLabel", "siteVisitors", "featured",
   "what", "why", "how", "contribution", "results",
 ]);
 
@@ -292,12 +334,26 @@ function wireProfileLinks() {
 }
 
 function renderProjects() {
-  const grid = document.getElementById("projectGrid");
+  const allGrid = document.getElementById("allProjectsGrid");
+  const homeGrid = document.getElementById("projectGrid");
+  const grid = allGrid || homeGrid;
+
   if (!grid) return;
 
-  grid.innerHTML = PROJECTS.map(
+  const isDedicatedProjectsPage = !!allGrid;
+  const isHome = !isDedicatedProjectsPage;
+
+  // On homepage: show only featured major projects.
+  // On projects page: show all projects.
+  const listToRender = isHome
+    ? PROJECTS.filter((p) => p.featured !== false)
+    : PROJECTS;
+
+  const basePath = isHome ? "projects/" : "";
+
+  grid.innerHTML = listToRender.map(
     (p) => `
-    <article class="project-card" data-project-id="${p.id}" tabindex="0" role="button" aria-haspopup="dialog" aria-label="View details for ${escapeHtml(p.name)}">
+    <article class="project-card" data-project-id="${p.id}" tabindex="0" role="link" aria-label="View case study for ${escapeHtml(p.name)}" style="cursor: pointer;">
       <div class="project-card-top">
         <h3>${escapeHtml(p.name)}</h3>
         <a class="project-card-link" href="${p.url}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(p.name)} on GitHub" data-pd-stop>
@@ -323,6 +379,11 @@ function renderProjects() {
       </div>
       <div class="project-tags">
         ${p.tags.map((t) => `<span>${escapeHtml(t)}</span>`).join("")}
+      </div>
+      <div class="project-card-actions">
+        <a class="project-cs-link" href="${basePath}${p.id}.html" data-pd-stop>
+          Read full case study &rarr;
+        </a>
       </div>
     </article>
   `
@@ -354,360 +415,36 @@ function escapeHtml(str) {
    reused for every project; content is injected on open.
 --------------------------------------------------------------------- */
 function setupProjectDetail() {
-  const grid = document.getElementById("projectGrid");
-  const overlay = document.getElementById("pdOverlay");
-  const panel = document.getElementById("pdPanel");
-  const scrollEl = document.getElementById("pdScroll");
-  const closeBtn = document.getElementById("pdClose");
-  if (!grid || !overlay || !panel || !scrollEl || !closeBtn) return;
+  const allGrid = document.getElementById("allProjectsGrid");
+  const homeGrid = document.getElementById("projectGrid");
+  const grid = allGrid || homeGrid;
 
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!grid) return;
 
-  let activeProject = null;
-  let triggerEl = null;
-  let stopScrollMotion = null;
-  let closing = false;
-  let openRafId = null;
-
-
-  function rectDelta(fromRect, toRect) {
-    return {
-      x: (fromRect.left + fromRect.width / 2) - (toRect.left + toRect.width / 2),
-      y: (fromRect.top + fromRect.height / 2) - (toRect.top + toRect.height / 2),
-      sx: fromRect.width / toRect.width,
-      sy: fromRect.height / toRect.height,
-    };
-  }
-
-  function openProject(project, fromEl) {
-    if (!project || closing) return;
-    activeProject = project;
-    triggerEl = fromEl || null;
-
-    renderProjectDetail(project);
-
-    overlay.removeAttribute("aria-hidden");
-    overlay.classList.add("is-open");
-    document.documentElement.classList.add("pd-scroll-lock");
-    scrollEl.scrollTop = 0;
-
-    if (fromEl && !reduceMotion) {
-      // Panel is already at its final centered rect at this point (the
-      // "Last" state) — measuring it now, synchronously, happens before
-      // the browser paints, so nothing flashes at the wrong size.
-      const cardRect = fromEl.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-      const d = rectDelta(cardRect, panelRect);
-
-      panel.classList.add("pd-panel--morphing");
-      panel.style.transition = "none";
-      panel.style.transform = `translate3d(${d.x}px, ${d.y}px, 0) scale(${d.sx}, ${d.sy})`;
-      panel.style.opacity = "0.5";
-      panel.getBoundingClientRect(); // force the above to apply before we change it again
-
-      openRafId = requestAnimationFrame(() => {
-        openRafId = null;
-        panel.style.transition = "";
-        panel.style.transform = "";
-        panel.style.opacity = "";
-      });
-
-      panel.addEventListener("transitionend", function onOpenEnd(e) {
-        if (e.target !== panel || e.propertyName !== "transform") return;
-        panel.removeEventListener("transitionend", onOpenEnd);
-        panel.classList.remove("pd-panel--morphing");
-      });
-    }
-
-    closeBtn.focus();
-    document.addEventListener("keydown", handleKeydown, true);
-
-
-  }
-
-  function closeProject() {
-    if (!overlay.classList.contains("is-open") || closing) return;
-
-    if (openRafId) {
-      cancelAnimationFrame(openRafId);
-      openRafId = null;
-    }
-
-    const canMorph = triggerEl && document.contains(triggerEl) && !reduceMotion;
-
-    overlay.classList.remove("is-open");
-
-    if (canMorph) {
-      closing = true;
-      const cardRect = triggerEl.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-      const d = rectDelta(cardRect, panelRect);
-
-      panel.classList.add("pd-panel--morphing");
-      panel.style.transition = "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease";
-      panel.getBoundingClientRect(); // force the transition above to apply first
-      panel.style.transform = `translate3d(${d.x}px, ${d.y}px, 0) scale(${d.sx}, ${d.sy})`;
-      panel.style.opacity = "0";
-
-      setTimeout(finishClose, 380);
-    } else {
-      finishClose();
-    }
-  }
-
-  function finishClose() {
-    overlay.setAttribute("aria-hidden", "true");
-    document.documentElement.classList.remove("pd-scroll-lock");
-    document.removeEventListener("keydown", handleKeydown, true);
-
-    if (stopScrollMotion) {
-      stopScrollMotion();
-      stopScrollMotion = null;
-    }
-
-    panel.classList.remove("pd-panel--morphing");
-    panel.style.transition = "";
-    panel.style.transform = "";
-    panel.style.opacity = "";
-
-    if (triggerEl && document.contains(triggerEl)) {
-      triggerEl.focus();
-    }
-    activeProject = null;
-    triggerEl = null;
-    closing = false;
-  }
-
-  function handleKeydown(e) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      closeProject();
-      return;
-    }
-    if (e.key === "Tab") {
-      trapFocus(e, panel);
-    }
+  function navigateToProject(card) {
+    if (!card || !card.dataset.projectId) return;
+    const isHome = !document.getElementById("allProjectsGrid");
+    const basePath = isHome ? "projects/" : "";
+    window.location.href = basePath + card.dataset.projectId + ".html";
   }
 
   grid.addEventListener("click", (e) => {
     if (e.target.closest("[data-pd-stop]")) return;
     const card = e.target.closest(".project-card");
     if (!card) return;
-    const project = PROJECTS.find((p) => p.id === card.dataset.projectId);
-    openProject(project, card);
+    navigateToProject(card);
   });
 
   grid.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
     if (e.target.closest("[data-pd-stop]")) return;
     const card = e.target.closest(".project-card");
-    if (!card || e.target !== card) return; // let nested links handle their own Enter
+    if (!card || e.target !== card) return;
     e.preventDefault();
-    const project = PROJECTS.find((p) => p.id === card.dataset.projectId);
-    openProject(project, card);
-  });
-
-  closeBtn.addEventListener("click", closeProject);
-  overlay.querySelectorAll("[data-pd-close]").forEach((el) => {
-    el.addEventListener("click", closeProject);
+    navigateToProject(card);
   });
 }
 
-function trapFocus(e, panel) {
-  const focusable = panel.querySelectorAll(
-    'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-  );
-  if (!focusable.length) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault();
-    last.focus();
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault();
-    first.focus();
-  }
-}
-
-function renderProjectDetail(p) {
-  document.getElementById("pdTitle").textContent = p.name;
-  document.getElementById("pdDesc").textContent = p.description;
-  document.getElementById("pdStatus").setAttribute("data-status", p.status);
-  document.getElementById("pdStatusLabel").textContent = p.statusLabel;
-
-  // pdVisitors isn't in index.html by default — created once, on demand,
-  // and re-used on every subsequent open so we don't duplicate it.
-  const pdMeta = document.querySelector(".pd-meta");
-  let visitorsEl = document.getElementById("pdVisitors");
-  if (!visitorsEl && pdMeta) {
-    visitorsEl = document.createElement("span");
-    visitorsEl.id = "pdVisitors";
-    visitorsEl.className = "project-visitors";
-    pdMeta.appendChild(visitorsEl);
-  }
-  if (visitorsEl) {
-    visitorsEl.textContent = p.siteVisitors ? `${p.siteVisitors} visitors` : "";
-    visitorsEl.style.display = p.siteVisitors ? "" : "none";
-  }
-
-  document.getElementById("pdTech").innerHTML = p.tags
-    .map((t) => `<span>${escapeHtml(t)}</span>`)
-    .join("");
-
-  document.getElementById("pdWhat").innerHTML = `<p>${escapeHtml(p.what)}</p>`;
-  document.getElementById("pdWhy").innerHTML = `<p>${escapeHtml(p.why)}</p>`;
-  document.getElementById("pdResults").innerHTML = `<p>${escapeHtml(p.results)}</p>`;
-
-  document.getElementById("pdHow").innerHTML = p.how
-    .map(
-      (step, i) =>
-        `<div class="pd-flow-step">${escapeHtml(step)}</div>` +
-        (i < p.how.length - 1 ? `<div class="pd-flow-arrow" aria-hidden="true">↓</div>` : "")
-    )
-    .join("");
-
-  document.getElementById("pdContribution").innerHTML = p.contribution
-    .map((c) => `<li>${escapeHtml(c)}</li>`)
-    .join("");
-
-  const actions = [];
-  if (p.demo) {
-    actions.push(
-      `<a class="btn btn--primary" href="${p.demo}" target="_blank" rel="noopener">Try Demo
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>`
-    );
-  }
-  actions.push(
-    `<a class="btn btn--ghost" href="${p.url}" target="_blank" rel="noopener">View GitHub
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>`
-  );
-  if (p.docs) {
-    actions.push(
-      `<a class="btn btn--ghost" href="${p.docs}" target="_blank" rel="noopener">View Documentation
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>`
-    );
-  }
-  document.getElementById("pdActions").innerHTML = actions.join("");
-}
-
-// As the visitor scrolls through the project window, sections fade
-// and shift slightly based on distance from a focus band near the
-// top of the viewport — passed sections drift up and fade, upcoming
-// ones sit low and dim, so the currently-read section stays the
-// clear visual focus.
-//
-// Performance: section positions relative to the scroll container
-// don't change while scrolling — only scrollTop does — so layout is
-// measured once (on open + on resize) and cached. Each scroll frame
-// then does pure arithmetic against that cache and writes styles,
-// with no DOM reads in between. Reading layout (getBoundingClientRect)
-// and writing styles in the same per-element loop, every frame, was
-// the earlier version of this function and forced a synchronous
-// layout recalculation on every element on every frame — the actual
-// cause of the scroll feeling laggy, especially on slower devices.
-function setupProjectDetailScrollMotion(scrollEl) {
-  const sections = Array.from(scrollEl.querySelectorAll("[data-pd-section]"));
-  if (!sections.length) return null;
-
-  let layout = [];
-  let viewportHeight = 0;
-  let ticking = false;
-
-  function measure() {
-    const scrollTop = scrollEl.scrollTop;
-    const containerTop = scrollEl.getBoundingClientRect().top;
-    viewportHeight = scrollEl.clientHeight;
-    
-    layout = sections.map((sec) => {
-      const r = sec.getBoundingClientRect();
-      const top = r.top - containerTop + scrollTop;
-      return { el: sec, top: top, height: r.height };
-    });
-  }
-
-  function update() {
-    ticking = false;
-    
-    // Batch these reads at the top so we don't cause layout thrashing
-    const scrollTop = scrollEl.scrollTop;
-    const scrollHeight = scrollEl.scrollHeight;
-    const maxScrollTop = Math.max(0, scrollHeight - viewportHeight);
-
-    layout.forEach(({ el, top, height }) => {
-      const centerAbsolute = top + height / 2;
-      
-      // Where does this section sit when scrolled to the absolute top vs absolute bottom?
-      // (Represented as a percentage of the viewport height, 0.0 to 1.0+)
-      const maxT = centerAbsolute / viewportHeight; 
-      const minT = (centerAbsolute - maxScrollTop) / viewportHeight;
-
-      // The standard safe zone is the middle third (0.33 to 0.67).
-      // If a section is trapped at the top or bottom and can't reach the middle, 
-      // we dynamically expand its safe zone so it doesn't fade while parked at the edge.
-      const safeTop = Math.min(0.33, maxT);
-      const safeBottom = Math.max(0.67, minT);
-
-      // Where is it right now?
-      const currentT = (centerAbsolute - scrollTop) / viewportHeight;
-
-      let opacity = 1;
-      let translate = 0;
-
-      if (currentT < safeTop) {
-        // Moving UP out of its safe zone
-        const distance = safeTop - currentT;
-        const fadeRatio = Math.min(1, distance / 0.33); // Fades out over 33% of the screen
-        opacity = 1 - (fadeRatio * 0.68); // Drops to 0.32 max
-        translate = -(fadeRatio * 22);
-      } else if (currentT > safeBottom) {
-        // Moving DOWN out of its safe zone
-        const distance = currentT - safeBottom;
-        const fadeRatio = Math.min(1, distance / 0.33);
-        opacity = 1 - (fadeRatio * 0.68);
-        translate = (fadeRatio * 22);
-      }
-
-      el.style.opacity = opacity.toFixed(3);
-      el.style.transform = `translateY(${translate.toFixed(1)}px)`;
-    });
-  }
-
-  function onScroll() {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(update);
-  }
-
-  function onResize() {
-    measure();
-    update();
-  }
-
-  measure();
-  update();
-  scrollEl.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onResize, { passive: true });
-
-  return function stop() {
-    scrollEl.removeEventListener("scroll", onScroll);
-    window.removeEventListener("resize", onResize);
-    layout.forEach(({ el }) => {
-      el.style.opacity = "";
-      el.style.transform = "";
-    });
-  };
-}
-
-/* ---------------------------------------------------------------------
-   Message form — sends straight to PROFILE.email via FormSubmit
-   (formsubmit.co), a free no-signup email-forwarding service. No
-   backend of your own required. See the NOTE near PROFILE at the top
-   of this file about the one-time confirmation email.
---------------------------------------------------------------------- */
 function setupMessageForm() {
   const form = document.getElementById("messageForm");
   if (!form) return;

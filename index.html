@@ -39,9 +39,15 @@
   <!-- ============ TOP BAR ============ -->
   <header class="topbar">
     <a href="#top" class="brand">Arav<span class="brand-dot">.</span></a>
+    <ul class="topbar-nav">
+      <li><a href="#top" class="is-active">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="projects/index.html">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
     <div class="topbar-actions">
       <a class="topbar-cta" id="ctaGithub" href="https://github.com/Aravkataria" target="_blank" rel="noopener">
-        View GitHub
+        <span>View GitHub</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
@@ -111,6 +117,11 @@
 
       <div class="project-grid" id="projectGrid">
         <!-- Cards are injected by script.js from the PROJECTS config -->
+      </div>
+      <div class="section-cta-row">
+        <a href="projects/index.html" class="btn btn--primary">
+          View all projects &amp; case studies &rarr;
+        </a>
       </div>
     </section>
 

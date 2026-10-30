@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Arch-Ai-Tex — Case Study</title>
+<meta name="description" content="Arch-Ai-Tex: AI-powered architectural floor-plan generator combining ONNX browser models, PyTorch GANs, Random Forest spatial regression, and physical ESP32 + Arduino Mega sensors." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css" />
+
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("theme");
+      var theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      if (theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (err) {
+      console.error("[portfolio] theme init failed:", err);
+    }
+  })();
+</script>
+</head>
+<body>
+  <canvas id="paintCanvas" class="paint-canvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a href="../index.html" class="brand">Arav<span class="brand-dot">.</span></a>
+    <ul class="topbar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="index.html" class="is-active">Projects</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="topbar-actions">
+      <a class="topbar-cta" href="https://github.com/Aravkataria/Arch-Ai-Tex" target="_blank" rel="noopener">
+        <span>View Repo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <span class="theme-toggle-label label-light">Light</span>
+        <span class="theme-toggle-label label-dark">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="section case-study-hero">
+      <div class="breadcrumb-nav">
+        <a href="index.html" class="breadcrumb-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to Projects
+        </a>
+      </div>
+
+      <p class="section-label">02 / Generative AI &amp; Hardware</p>
+      <h1 class="section-title" style="font-size: clamp(2.4rem, 6vw, 3.6rem); margin-bottom: 12px;">
+        Arch-Ai-Tex
+      </h1>
+      <p class="hero-sub" style="font-size: 1.15rem; max-width: 680px; margin-bottom: 20px;">
+        AI-powered floor-plan generation combining GAN-based image generation, Random Forest layout optimization, semantic segmentation, and real-time room measurement via Arduino Mega + ESP32 sensors.
+      </p>
+
+      <div class="cs-header-meta">
+        <span class="project-status" data-status="open-source">
+          <span class="project-status-dot"></span>Open Source
+        </span>
+        <span class="project-visitors">500+ visitors</span>
+        <div class="project-tags">
+          <span>Python</span>
+          <span>PyTorch</span>
+          <span>ONNX Runtime Web</span>
+          <span>GAN</span>
+          <span>Random Forest</span>
+          <span>ESP32</span>
+          <span>Streamlit</span>
+        </div>
+      </div>
+
+      <div class="cs-hero-actions">
+        <a href="https://aravkataria.github.io/Arch-Ai-Tex/" target="_blank" rel="noopener" class="btn btn--primary btn--sm">
+          Launch Live Web App
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://github.com/Aravkataria/Arch-Ai-Tex" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">
+          View on GitHub
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <!-- Arch-Ai-Tex Live Web App & Generator Interface -->
+      <div class="cs-preview-media" style="margin-bottom: 24px;">
+        <span class="cs-preview-badge">Interactive Web App UI</span>
+        <img src="../assets/projects/arch-landing.png" alt="Arch-Ai-Tex Intelligent Design Landing Interface" />
+      </div>
+
+      <div class="cs-preview-media" style="margin-top: 0; margin-bottom: 48px;">
+        <span class="cs-preview-badge">GAN Floor Plan Generator &amp; Prediction Console</span>
+        <img src="../assets/projects/arch-generator.png" alt="Arch-Ai-Tex Multi-Plan Generative Engine with Predicted Dwelling Types" />
+      </div>
+
+      <!-- Content Sections -->
+      <section class="cs-section">
+        <h2 class="cs-section-title">What It Is</h2>
+        <div class="cs-prose">
+          <p>
+            Arch-Ai-Tex is a full-stack, AI-powered architectural assistant that automates the generation of coherent floor plans. Instead of relying on a black-box prompt, it provides three distinct generation modes:
+          </p>
+          <p>
+            <strong>1. In-Browser Client GAN:</strong> Powered by an ONNX runtime model (<code>generator.onnx</code>) running 100% client-side in the browser on GitHub Pages.<br/>
+            <strong>2. Optimized Layout Engine:</strong> A Random Forest regressor combined with geometric heuristic constraints that calculates realistic room aspect ratios based on target square footage, room counts, and property type.<br/>
+            <strong>3. Physical IoT Telemetry:</strong> An Arduino Mega + ESP32 rig that captures real-world wall dimensions with ultrasonic, PIR, and infrared sensors to seed layout dimensions directly into the models.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Why It Was Built</h2>
+        <div class="cs-prose">
+          <p>
+            Creating architectural plans is slow and requires specialized CAD expertise, while standard generative image models frequently hallucinate non-functional layouts (rooms without doors, floating walls, or impossible geometric ratios).
+          </p>
+          <p>
+            Arch-Ai-Tex was engineered to solve this by anchoring deep generative networks to rigorous geometric boundaries: combining GAN image generation with Random Forest area prediction, semantic wall segmentation, and direct physical sensor telemetry.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Multi-Tier Architecture</h2>
+        <div class="pd-flow" style="max-width: 500px; margin: 24px auto;">
+          <div class="pd-flow-step">1. Physical Input: ESP32 + Arduino Mega Ultrasonic &amp; PIR Sensor Sweep</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">2. Web Client: ONNX Runtime Web In-Browser Latent Noise Sampling</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">3. Deep Generator: 100-Epoch PyTorch GAN Model Generating 256×256 Plans</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">4. Spatial Regressor: Random Forest (scikit-learn) Dimension Predictor</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">5. Computer Vision: Semantic Segmentation for Structural Walls &amp; Doors</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">6. Interactive Dashboard: Streamlit &amp; Standalone Web Interface</div>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Key Contributions &amp; Engineering</h2>
+        <ul class="cs-key-points">
+          <li><strong>ONNX Web Model Port:</strong> Converted the trained PyTorch generator into an optimized ONNX graph, running real-time generative neural networks directly in user web browsers.</li>
+          <li><strong>Random Forest Spatial Heuristic:</strong> Trained a scikit-learn regressor to predict room-area distributions (bedrooms, kitchen, living, bathrooms) with strict containment logic.</li>
+          <li><strong>Dual Microcontroller Hardware Stack:</strong> Wrote firmware for Arduino Mega and ESP32 with multi-sensor telemetry over serial/Wi-Fi to map physical room boundaries.</li>
+          <li><strong>Interactive Web &amp; Streamlit Frontends:</strong> Shipped both a static browser deployment on GitHub Pages and a feature-rich Streamlit application for deep parameter tuning.</li>
+        </ul>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Results &amp; Impact</h2>
+        <div class="cs-prose">
+          <p>
+            Demonstrated that neural generative modeling coupled with machine learning regression can generate structurally plausible, constraint-compliant architectural drawings. The project has earned 500+ visitors and serves as an interactive showcase of hardware-AI convergence.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bottom Navigation -->
+      <div class="cs-footer-nav">
+        <a href="vajra.html" class="btn btn--ghost">
+          &larr; Prev: VAJRA
+        </a>
+        <a href="lumidesk.html" class="btn btn--primary">
+          Next: LumiDesk &rarr;
+        </a>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <p>Built by Arav — <span id="year"></span></p>
+    </footer>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>

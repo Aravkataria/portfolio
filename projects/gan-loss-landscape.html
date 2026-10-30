@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GAN Loss Landscape — Case Study</title>
+<meta name="description" content="GAN Loss Landscape: Research tool for visualizing the optimization geometry of trained GANs across 1D, 2D, and 3D parameter spaces." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css" />
+
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("theme");
+      var theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      if (theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (err) {
+      console.error("[portfolio] theme init failed:", err);
+    }
+  })();
+</script>
+</head>
+<body>
+  <canvas id="paintCanvas" class="paint-canvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a href="../index.html" class="brand">Arav<span class="brand-dot">.</span></a>
+    <ul class="topbar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="index.html" class="is-active">Projects</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="topbar-actions">
+      <a class="topbar-cta" href="https://github.com/Aravkataria/GAN-loss-landscape-visualization" target="_blank" rel="noopener">
+        <span>View Repo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <span class="theme-toggle-label label-light">Light</span>
+        <span class="theme-toggle-label label-dark">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="section case-study-hero">
+      <div class="breadcrumb-nav">
+        <a href="index.html" class="breadcrumb-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to Projects
+        </a>
+      </div>
+
+      <p class="section-label">05 / Deep Learning Research</p>
+      <h1 class="section-title" style="font-size: clamp(2.4rem, 6vw, 3.6rem); margin-bottom: 12px;">
+        GAN Loss Landscape
+      </h1>
+      <p class="hero-sub" style="font-size: 1.15rem; max-width: 680px; margin-bottom: 20px;">
+        Research tool for visualizing the optimization geometry of a trained GAN by perturbing its parameters along random directions and measuring Generator loss across a parameter-space grid.
+      </p>
+
+      <div class="cs-header-meta">
+        <span class="project-status" data-status="research">
+          <span class="project-status-dot"></span>Research
+        </span>
+        <span class="project-visitors">100+ visitors</span>
+        <div class="project-tags">
+          <span>Python</span>
+          <span>PyTorch</span>
+          <span>Matplotlib</span>
+          <span>Deep Learning</span>
+          <span>3D Mesh (PLY)</span>
+          <span>Optimization Geometry</span>
+        </div>
+      </div>
+
+      <div class="cs-hero-actions">
+        <a href="https://github.com/Aravkataria/GAN-loss-landscape-visualization" target="_blank" rel="noopener" class="btn btn--primary btn--sm">
+          View on GitHub
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <!-- Real 3D Loss Landscape Surface Render -->
+      <div class="cs-preview-media">
+        <span class="cs-preview-badge">3D Loss Topology Plot</span>
+        <img src="../assets/projects/gan-landscape-3d.png" alt="3D GAN Loss Landscape Surface" onerror="this.style.display='none'; document.getElementById('ganPlaceholder').style.display='flex';" />
+        <div id="ganPlaceholder" class="cs-preview-media-placeholder" style="display: none;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 16l4-8 5 5 5-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p>Add 3D Loss Surface Renders &amp; Heatmaps Here</p>
+        </div>
+      </div>
+
+      <!-- Content Sections -->
+      <section class="cs-section">
+        <h2 class="cs-section-title">What It Is</h2>
+        <div class="cs-prose">
+          <p>
+            GAN Loss Landscape probes the multi-million parameter space around a trained Generative Adversarial Network to visualize how Generator loss curves fluctuate under controlled perturbations. Two random normalized directions are sampled through parameter space, and loss is systematically calculated across a 2D grid slice to reconstruct the local optimization topology.
+          </p>
+          <p>
+            The system outputs 1D directional cross-sections, 2D contour heatmaps, interactive 3D matplotlib surfaces, and exportable 3D PLY meshes for external analysis in Blender or MeshLab.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Why It Was Built</h2>
+        <div class="cs-prose">
+          <p>
+            Training GANs is notoriously unstable (mode collapse, vanishing gradients, oscillatory dynamics). Standard 2D loss vs. epoch plots fail to reveal why training collapsed or whether a converged model sits in a flat, robust basin or a fragile, razor-thin sharp valley.
+          </p>
+          <p>
+            This tool brings geometric intuition to the black box of high-dimensional non-convex optimization.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Probing Methodology</h2>
+        <div class="pd-flow" style="max-width: 480px; margin: 24px auto;">
+          <div class="pd-flow-step">1. Pretrained PyTorch Generator &amp; Discriminator Checkpoints</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">2. Sample Two Normalized Orthogonal Random Directions (&delta;, &eta;)</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">3. Controlled Grid Perturbation: &theta;(&alpha;, &beta;) = &theta;* + &alpha;&delta; + &beta;&eta;</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">4. Batch Evaluation across GRID_STEPS Resolution</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">5. 1D Slices, 2D Topographic Contours &amp; 3D PLY Mesh Output</div>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Key Contributions &amp; Features</h2>
+        <ul class="cs-key-points">
+          <li><strong>Directional Normalization:</strong> Implemented filter-wise normalization to eliminate artificial scale invariance artifacts in high-dimensional convolutional layers.</li>
+          <li><strong>Multi-Dimensional Visualization:</strong> Built automatic rendering pipelines for 1D trajectory slices, 2D contour plots, and 3D elevation maps.</li>
+          <li><strong>PLY 3D Mesh Export:</strong> Added export utilities to generate textured 3D polygon meshes from mathematical loss grids for high-fidelity spatial inspection.</li>
+          <li><strong>Dual Metric Comparison:</strong> Plotted Generator adversarial loss against empirical sample generation success rates.</li>
+        </ul>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Results &amp; Takeaways</h2>
+        <div class="cs-prose">
+          <p>
+            Enabled empirical inspection of the GAN minimax saddle-point landscape. High-resolution grid evaluations clearly distinguished well-generalized generator states (broad, shallow basins) from models vulnerable to mode collapse (sharp, chaotic ravines).
+          </p>
+        </div>
+      </section>
+
+      <!-- Bottom Navigation -->
+      <div class="cs-footer-nav">
+        <a href="pyramid-compression.html" class="btn btn--ghost btn--sm">
+          &larr; Prev: Pyramid Compress
+        </a>
+        <a href="index.html" class="btn btn--primary btn--sm">
+          Back to All Projects &rarr;
+        </a>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <p>Built by Arav — <span id="year"></span></p>
+    </footer>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>

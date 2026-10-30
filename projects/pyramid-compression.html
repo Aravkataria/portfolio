@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pyramid Compress — Case Study</title>
+<meta name="description" content="Pyramid Compress: Image compression built from raw pixel operations using recursive pyramid downsampling and bilinear reconstruction with interactive client-side web workspace." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css" />
+
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("theme");
+      var theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      if (theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (err) {
+      console.error("[portfolio] theme init failed:", err);
+    }
+  })();
+</script>
+</head>
+<body>
+  <canvas id="paintCanvas" class="paint-canvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a href="../index.html" class="brand">Arav<span class="brand-dot">.</span></a>
+    <ul class="topbar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="index.html" class="is-active">Projects</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="topbar-actions">
+      <a class="topbar-cta" href="https://github.com/Aravkataria/pyramid-compression" target="_blank" rel="noopener">
+        <span>View Repo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <span class="theme-toggle-label label-light">Light</span>
+        <span class="theme-toggle-label label-dark">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="section case-study-hero">
+      <div class="breadcrumb-nav">
+        <a href="index.html" class="breadcrumb-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to Projects
+        </a>
+      </div>
+
+      <p class="section-label">04 / Computer Vision &amp; Algorithms</p>
+      <h1 class="section-title" style="font-size: clamp(2.4rem, 6vw, 3.6rem); margin-bottom: 12px;">
+        Pyramid Compress
+      </h1>
+      <p class="hero-sub" style="font-size: 1.15rem; max-width: 680px; margin-bottom: 20px;">
+        Image compression system implemented from raw pixel operations using recursive pyramid downsampling, nearest-neighbor or bilinear reconstruction, and objective PSNR quality analysis.
+      </p>
+
+      <div class="cs-header-meta">
+        <span class="project-status" data-status="open-source">
+          <span class="project-status-dot"></span>Open Source
+        </span>
+        <span class="project-visitors">350+ visitors</span>
+        <div class="project-tags">
+          <span>Python</span>
+          <span>NumPy</span>
+          <span>Pillow</span>
+          <span>JavaScript</span>
+          <span>HTML5 Canvas</span>
+          <span>Zero Server / Local Memory</span>
+        </div>
+      </div>
+
+      <div class="cs-hero-actions">
+        <a href="https://aravkataria.github.io/pyramid-compression/" target="_blank" rel="noopener" class="btn btn--primary btn--sm">
+          Launch Live Web Workspace
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://github.com/Aravkataria/pyramid-compression" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">
+          View on GitHub
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <!-- Pyramid Compress Live Frontend Screenshots -->
+      <div class="cs-preview-media" style="margin-bottom: 24px;">
+        <span class="cs-preview-badge">Web Application Hero</span>
+        <img src="../assets/projects/pyramid-landing.png" alt="Pyramid Compress Interactive Web Landing Page" />
+      </div>
+
+      <div class="cs-preview-media" style="margin-top: 0; margin-bottom: 48px;">
+        <span class="cs-preview-badge">Client-Side Compression Workspace</span>
+        <img src="../assets/projects/pyramid-workspace.jpg" alt="Pyramid Compress Real-Time Side-by-Side Reconstruction Workspace" />
+      </div>
+
+      <!-- Content Sections -->
+      <section class="cs-section">
+        <h2 class="cs-section-title">What It Is</h2>
+        <div class="cs-prose">
+          <p>
+            Pyramid Compress demystifies image compression by exposing the raw pixel mathematics instead of hiding behind proprietary binary codecs. By averaging 2×2 pixel blocks across recursive depth levels, the image resolution is progressively halved (cutting raw pixel counts by ~75% per level, e.g., 1080p &rarr; 540p &rarr; 270p &rarr; 135p).
+          </p>
+          <p>
+            The project ships both as an offline Python CLI tool and a 100% client-side web application built with vanilla JavaScript and HTML5 Canvas that executes in user memory with zero external API calls.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Why It Was Built</h2>
+        <div class="cs-prose">
+          <p>
+            Most developers treat compression codecs as immutable black boxes. Pyramid Compress was built from first principles to explore the mathematical trade-off between spatial quantization, boundary conditions across arbitrary aspect ratios, and visual reconstruction quality.
+          </p>
+          <p>
+            By coupling reconstruction algorithms with objective Peak Signal-to-Noise Ratio (PSNR) metrics, it provides an intuitive, measurable sandbox for lossy image compression.
+          </p>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Mathematical &amp; Algorithmic Pipeline</h2>
+        <div class="pd-flow" style="max-width: 480px; margin: 24px auto;">
+          <div class="pd-flow-step">1. Image Input Matrix: P(x, y) RGB Channel Parsing</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">2. Recursive Downsampling: P_new = (P_00 + P_10 + P_01 + P_11) / 4</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">3. Serialization &amp; .meta.txt Sidecar Metadata Generation</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">4. Upsampling Reconstruction: Nearest-Neighbor vs Bilinear Interpolation</div>
+          <div class="pd-flow-arrow" aria-hidden="true">↓</div>
+          <div class="pd-flow-step">5. Objective Quality Metric: PSNR = 10 · log10(MAX² / MSE)</div>
+        </div>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Key Contributions &amp; Engineering</h2>
+        <ul class="cs-key-points">
+          <li><strong>Arbitrary Aspect Ratio Handling:</strong> Designed recursive downsampling logic that handles odd-dimension boundaries without padding distortion.</li>
+          <li><strong>Zero-Server Browser Workspace:</strong> Implemented the complete 2D array downsampling and bilinear interpolation engine in pure JavaScript and Canvas.</li>
+          <li><strong>Metadata Sidecar Protocol:</strong> Created <code>.meta.txt</code> sidecars to store exact level counts and original aspect ratios for deterministic reconstruction.</li>
+          <li><strong>Comparative Kernel Benchmarking:</strong> Integrated real-time PSNR calculation in both Python and JavaScript to scientifically prove bilinear interpolation provides +4 to +6 dB higher structural fidelity than nearest-neighbor.</li>
+        </ul>
+      </section>
+
+      <section class="cs-section">
+        <h2 class="cs-section-title">Results &amp; Security Highlights</h2>
+        <div class="cs-prose">
+          <p>
+            Zero-data-collection architecture: uploaded images never touch an external server or network socket. Tested extensively across JPEG, PNG, and WebP formats with sub-second browser reconstruction times.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bottom Navigation -->
+      <div class="cs-footer-nav">
+        <a href="lumidesk.html" class="btn btn--ghost">
+          &larr; Prev: LumiDesk
+        </a>
+        <a href="gan-loss-landscape.html" class="btn btn--primary">
+          Next: GAN Loss Landscape &rarr;
+        </a>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <p>Built by Arav — <span id="year"></span></p>
+    </footer>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>

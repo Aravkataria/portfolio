@@ -1109,3 +1109,270 @@ button:focus-visible {
   .pd-panel { transform: none !important; }
   .pd-section { opacity: 1 !important; transform: none !important; }
 }
+
+/* =========================================================
+   MULTI-PAGE NAVIGATION & CASE STUDY EXTENSIONS
+========================================================= */
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.topbar-nav a {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color 0.25s ease;
+  position: relative;
+  padding: 6px 0;
+  display: inline-block;
+}
+.topbar-nav a::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--violet);
+  border-radius: 2px;
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+}
+.topbar-nav a:hover {
+  color: var(--ink);
+}
+.topbar-nav a:hover::after {
+  transform: translateX(-50%) scaleX(1);
+}
+.topbar-nav a.is-active {
+  color: var(--ink);
+}
+.topbar-nav a.is-active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* Projects grid extension & actions */
+.section-cta-row {
+  margin-top: 36px;
+  display: flex;
+  justify-content: center;
+}
+.project-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.project-cs-link {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--violet);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+.project-card:hover .project-cs-link {
+  transform: translateX(3px);
+}
+
+/* Dedicated Case Study Page Styles */
+.case-study-hero {
+  padding-top: 140px;
+  padding-bottom: 40px;
+}
+.breadcrumb-nav {
+  margin-bottom: 24px;
+}
+.breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 6px 12px;
+  background: var(--surface-strong);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+.breadcrumb-link:hover {
+  color: var(--violet);
+  border-color: var(--violet);
+  transform: translateX(-2px);
+}
+
+.cs-header-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.cs-preview-media {
+  margin: 32px 0 48px;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(var(--shadow-rgb), 0.08);
+  position: relative;
+}
+.cs-preview-media img {
+  width: 100%;
+  max-height: 440px;
+  object-fit: cover;
+  display: block;
+}
+.cs-preview-media-placeholder {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(124, 58, 237, 0.03),
+    rgba(124, 58, 237, 0.03) 12px,
+    transparent 12px,
+    transparent 24px
+  );
+}
+.cs-preview-media-placeholder svg {
+  color: var(--violet);
+  opacity: 0.6;
+  margin-bottom: 12px;
+}
+.cs-preview-media-placeholder p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.cs-preview-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-dock);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+}
+
+.cs-section {
+  padding: 40px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cs-section:last-of-type {
+  border-bottom: none;
+}
+.cs-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--violet);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 16px;
+}
+.cs-prose {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--ink);
+  max-width: 680px;
+}
+.cs-prose p + p {
+  margin-top: 14px;
+}
+
+.cs-key-points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+  max-width: 680px;
+}
+.cs-key-points li {
+  position: relative;
+  padding-left: 24px;
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+.cs-key-points li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.6em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--violet);
+}
+
+.cs-footer-nav {
+  padding: 60px 0 140px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+  margin-top: 40px;
+}
+
+@media (max-width: 720px) {
+  .topbar-nav { display: none; }
+  .cs-preview-media img { max-height: 280px; }
+  .cs-preview-media-placeholder { min-height: 180px; }
+  .case-study-hero { padding-top: 110px; }
+}
+
+/* Center odd cards without expanding their width beyond normal cards */
+.project-grid {
+  justify-content: center;
+}
+.project-grid > .project-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 100%;
+  max-width: calc(50% - 9px);
+}
+
+/* Compact Case Study Action Buttons */
+.cs-hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+.btn--sm {
+  font-size: 0.82rem;
+  padding: 8px 16px;
+  gap: 6px;
+}
+@media (max-width: 720px) {
+  .project-grid > .project-card:last-child:nth-child(odd) {
+    max-width: 100%;
+    grid-column: auto;
+  }
+}
