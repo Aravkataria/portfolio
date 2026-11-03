@@ -162,28 +162,21 @@ a { color: inherit; text-decoration: none; }
    near-white page — dark mode's own filter override below replaces
    this value entirely, so it's unaffected. */
 .paint-canvas--gl {
-  filter: saturate(1.4) contrast(1.08);
+  filter: saturate(1.3) contrast(1.05);
   mix-blend-mode: normal;
-  opacity: 1;
+  opacity: 0.88;
   will-change: filter;
-  transition: filter 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: filter 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease;
 }
 
-/* The fluid sim's shader math composites its dye as "ink absorbed from
-   white paper" (see script.js), so it always renders a white base with
-   colored blooms. Inverting it in dark mode turns that white base into
-   near-black and keeps the color blooms vivid — same simulation, same
-   physics, just recolored for a dark page. The 2D fallback instead
-   switches its blend mode, since its drops are painted with alpha
-   directly rather than baked against a white base. */
 html[data-theme="dark"] .paint-canvas--gl {
-  filter: invert(1) hue-rotate(180deg);
+  filter: invert(1) hue-rotate(180deg) brightness(0.92);
+  opacity: 0.82;
 }
 html[data-theme="dark"] .paint-canvas:not(.paint-canvas--gl) {
   mix-blend-mode: screen;
-  opacity: 0.7;
+  opacity: 0.5;
 }
-
 /* =========================================================
    TOPBAR
 ========================================================= */
@@ -1374,5 +1367,100 @@ button:focus-visible {
   .project-grid > .project-card:last-child:nth-child(odd) {
     max-width: 100%;
     grid-column: auto;
+  }
+}
+/* Recognition & Award Card */
+.cs-award-card {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  max-width: 680px;
+}
+.cs-award-content {
+  flex: 1;
+}
+.cs-award-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--violet);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.cs-award-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+}
+.cs-award-desc {
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.cs-award-thumb-wrap {
+  flex-shrink: 0;
+  width: 90px;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 18px rgba(var(--shadow-rgb), 0.08);
+  background: var(--surface-solid);
+}
+.cs-award-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.cs-award-thumb-wrap:hover img {
+  transform: scale(1.05);
+}
+
+/* Seamless design token pill */
+.cs-award-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--violet);
+  border: 1px solid var(--card-border);
+}
+.cs-award-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--violet);
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .cs-award-card {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+  .cs-award-thumb-wrap {
+    width: 100%;
+    height: 160px;
   }
 }
