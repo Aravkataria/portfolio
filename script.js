@@ -608,8 +608,8 @@ function setupFluidBackground(originalCanvas) {
   const CURL = 22; // swirliness
   const SPLAT_RADIUS = 0.22;
   const SPLAT_FORCE = 4200;
-  const MAX_ABSORPTION = 0.78; // hard cap — background can never get darker than this, so text stays readable
-  const DYE_STRENGTH = 0.55; // scales how much color a single splat injects
+  const MAX_ABSORPTION = 0.62; // tuned balance: vivid color blooms without washing out text
+  const DYE_STRENGTH = 0.45; // balanced splat color density
   const MIN_SPLAT_INTERVAL_MS = 40; // floor on how often mouse movement can inject color, even moving fast
 
   const COLOR_HOLD_MS = 6000;
