@@ -13,8 +13,8 @@ const PROJECTS = [
     tags: ["Rust", "Python", "Rayon", "SMT Solver", "Cybersecurity", "AI Reasoning"],
     url: "https://github.com/Aravkataria/VAJRA",
     demo: "https://Aravkataria.github.io/VAJRA/",
-    status: "production",
-    statusLabel: "Production / Research",
+    status: "open-source",
+    statusLabel: "Open Source / Research",
     siteVisitors: "1,200+",
     featured: true,
 
